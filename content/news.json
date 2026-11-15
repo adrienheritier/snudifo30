@@ -1,15 +1,5 @@
 [
   {
-    "date": "2026-11-15",
-    "tag": "Actualité",
-    "title": "Test de publication",
-    "summary": "Je fais un petit test",
-    "url": "https://snudi30.force-ouvriere.org/",
-    "id": "pub-mwhzbuul-coszfr",
-    "bodyHtml": "Bla bla bla test<div><br></div><div><figure><img src=\"./media/actualites/mwhzbwek-r6yp5ii7a-article.webp\" alt=\"Photographie de la publication\" loading=\"lazy\" decoding=\"async\"></figure><p>bla bla bla re test</p></div>",
-    "cover": "./media/actualites/mwhzbxj0-uc6xg619zr-couverture.webp"
-  },
-  {
     "id": "n1",
     "date": "2026-11-09",
     "tag": "Mobilisations",
