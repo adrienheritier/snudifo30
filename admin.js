@@ -3,7 +3,7 @@
  */
 'use strict';
 const $ = selector => document.querySelector(selector);
-const state = {token:'',owner:'',repo:'',branch:'main',tab:'news',toolsFilter:'all',records:{news:[],events:[],tools:[]},sha:{news:'',events:'',tools:''},editingId:null,busy:false,dirty:false,coverDraft:null,coverRemoved:false,pendingMedia:new Map(),editorRange:null,selectedImage:null};
+const state = {token:'',owner:'',repo:'',branch:'main',tab:'news',toolsFilter:'all',records:{news:[],events:[],tools:[]},sha:{news:'',events:'',tools:''},editingId:null,busy:false,dirty:false,coverDraft:null,coverRemoved:false,pendingMedia:new Map(),editorRange:null,selectedImage:null,orderMode:false,orderSection:null,orderDraft:[],orderDirty:false};
 const PATHS = {news:'content/news.json',events:'content/events.json',tools:'content/tools.json'};
 const FIELDS = {
  news:[
@@ -32,6 +32,16 @@ const FIELDS = {
  ]
 };
 const SECTION_NAMES={bareme:'Barème mouvement',modeles:'Modèles de courriers',fiches:'Fiches pratiques',documents:'Documents utiles'};
+// Compatibilité : les anciennes fiches sans « order » gardent leur ordre d'origine dans tools.json.
+function orderedTools(records,section){return records.filter(r=>r.section===section).map((record,index)=>({record,index})).sort((a,b)=>{
+ const av=Number.isSafeInteger(a.record.order)&&a.record.order>=0?a.record.order:a.index;
+ const bv=Number.isSafeInteger(b.record.order)&&b.record.order>=0?b.record.order:b.index;
+ return av-bv||a.index-b.index;
+}).map(({record})=>record);}
+function resetOrder(){state.orderMode=false;state.orderSection=null;state.orderDraft=[];state.orderDirty=false;}
+function orderChanged(){return state.orderDirty;}
+function ensureReorderClosed(){if(!state.orderMode)return true;if(state.orderDirty&&!confirm('L’ordre modifié n’a pas été publié sur GitHub. Abandonner ces changements ?'))return false;resetOrder();return true;}
+
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
 const sleep=ms=>new Promise(ok=>setTimeout(ok,ms));
 const escapeHtml=str=>String(str??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -51,7 +61,7 @@ async function readRemote(type){const {response,result}=await api(PATHS[type]);i
  let records;try{records=JSON.parse(decode64(result.content));}catch{throw Error(`${PATHS[type]} n'est pas un JSON valide.`);}
  if(!Array.isArray(records)||records.length>1000)throw Error(`Format de ${PATHS[type]} invalide.`);
  return {records,sha:result.sha};}
-async function reloadAll(){setBusy(true);try{const [n,e,t]=await Promise.all([readRemote('news'),readRemote('events'),readRemote('tools')]);state.records.news=n.records;state.records.events=e.records;state.records.tools=t.records;state.sha.news=n.sha;state.sha.events=e.sha;state.sha.tools=t.sha;resetDraft();render();message('Contenus chargés depuis GitHub.','ok');}catch(error){message(error.message,'error');throw error;}finally{setBusy(false);}}
+async function reloadAll(){setBusy(true);try{const [n,e,t]=await Promise.all([readRemote('news'),readRemote('events'),readRemote('tools')]);state.records.news=n.records;state.records.events=e.records;state.records.tools=t.records;state.sha.news=n.sha;state.sha.events=e.sha;state.sha.tools=t.sha;resetDraft();resetOrder();render();message('Contenus chargés depuis GitHub.','ok');}catch(error){message(error.message,'error');throw error;}finally{setBusy(false);}}
 async function connect(event){event.preventDefault();if(state.busy)return;const f=new FormData(event.currentTarget);
  try{state.owner=String(f.get('owner')||'').trim();state.repo=String(f.get('repo')||'').trim();state.branch=String(f.get('branch')||'main').trim();state.token=String(f.get('token')||'').trim();validatePath(state.owner,'Propriétaire');validatePath(state.repo,'Dépôt');if(!state.branch||state.branch.includes('..'))throw Error('Branche invalide.');if(!state.token)throw Error('Jeton GitHub manquant.');await reloadAll();$('#token').value='';$('#repositoryTitle').textContent=repoInfo();$('#repositorySubtitle').textContent='Actualités, calendrier et outils enrichis publiés sur GitHub.';$('#connection').hidden=true;$('#workspace').hidden=false;}catch(error){state.token='';$('#token').value='';message(error.message,'error');}}
 function mk(tag,cls='',txt=''){const el=document.createElement(tag);if(cls)el.className=cls;if(txt)el.textContent=txt;return el;}
@@ -63,7 +73,13 @@ function field(f,value){const wrap=mk('div','form-control');const label=mk('labe
 function usedPaths(record){const results=new Set();if(!record||typeof record!=='object')return results;const cover=SnudiArticle.asPath(record.cover||'');if(cover)results.add(cover);SnudiArticle.imagePaths(record.bodyHtml||'').forEach(p=>results.add(p));return results;}
 function resetDraft(){for(const url of state.pendingMedia.keys())URL.revokeObjectURL(url);state.pendingMedia.clear();if(state.coverDraft){URL.revokeObjectURL(state.coverDraft.url);state.coverDraft=null;}state.coverRemoved=false;state.editorRange=null;state.selectedImage=null;state.dirty=false;state.editingId=null;}
 function confirmDiscard(){return !state.dirty||confirm('Les modifications de ce formulaire ne sont pas publiées. Les abandonner ?');}
-function renderList(){const list=$('#recordList');list.replaceChildren();const records=[...state.records[state.tab]].filter(r=>state.tab!=='tools'||state.toolsFilter==='all'||r.section===state.toolsFilter).sort((a,b)=>state.tab==='news'?(b.date||'').localeCompare(a.date||''):state.tab==='events'?(a.date||'').localeCompare(b.date||''):(a.section||'').localeCompare(b.section||'')||(a.title||'').localeCompare(b.title||''));
+function renderList(){
+ const list=$('#recordList');list.replaceChildren();
+ const sections=Object.keys(SECTION_NAMES),positions=new Map();
+ if(state.tab==='tools')sections.forEach(section=>orderedTools(state.records.tools,section).forEach((record,index)=>positions.set(record.id,index)));
+ const records=[...state.records[state.tab]]
+  .filter(r=>state.tab!=='tools'||state.toolsFilter==='all'||r.section===state.toolsFilter)
+  .sort((a,b)=>state.tab==='news'?(b.date||'').localeCompare(a.date||''):state.tab==='events'?(a.date||'').localeCompare(b.date||''):sections.indexOf(a.section)-sections.indexOf(b.section)||(positions.get(a.id)??0)-(positions.get(b.id)??0));
  $('#listTitle').textContent=(state.tab==='news'?'Actualités':state.tab==='events'?'Événements':'Contenus des outils')+` (${records.length})`;
  if(!records.length){list.append(mk('p','muted','Aucune entrée. Ajoute une première publication.'));return;}
  records.forEach(r=>{const card=mk('article','admin-record'+(state.editingId===r.id?' selected':''));const main=mk('div','admin-record-main');main.append(mk('b','',r.title||'Sans titre'),mk('span','',state.tab==='tools'?(SECTION_NAMES[r.section]||r.section||'Outil')+(r.tag?' • '+r.tag:''):`${r.date||'Sans date'} • ${r.tag||r.type||'Autre'}`));if(r.cover)main.append(mk('span','','🖼️ Image de couverture'));const actions=mk('div','admin-record-actions');const edit=mk('button','','Modifier');edit.type='button';edit.dataset.action='edit';edit.dataset.id=r.id;const del=mk('button','delete','Supprimer');del.type='button';del.dataset.action='delete';del.dataset.id=r.id;actions.append(edit,del);card.append(main,actions);list.append(card);});}
@@ -88,9 +104,64 @@ function renderForm(){const form=$('#recordForm');form.replaceChildren();const r
  if(state.tab!=='events'){refreshCover(rec);updateSelectedImage(null);}}
 function refreshCover(rec={}){const img=$('#coverPreview');if(!img)return;const src=state.coverDraft?.url||(!state.coverRemoved?SnudiArticle.asPath(rec.cover||''):'');img.hidden=!src;if(src)img.src=src;else img.removeAttribute('src');$('#coverStatus').textContent=state.coverDraft?'Nouvelle image sélectionnée et compressée.':src?'Image actuellement publiée.':'Aucune couverture sélectionnée.';$('#removeCover').disabled=!src;}
 function updateSelectedImage(node){if(state.selectedImage&&state.selectedImage.isConnected)state.selectedImage.classList.remove('image-selected');const ed=$('#richEditor');state.selectedImage=(node&&ed?.contains(node)&&node.tagName==='IMG')?node:null;if(state.selectedImage)state.selectedImage.classList.add('image-selected');const tools=$('#selectedImageTools');if(tools)tools.hidden=!state.selectedImage;}
-function render(){for(const tab of ['news','events','tools']){const button=$('#tab'+tab[0].toUpperCase()+tab.slice(1));button.classList.toggle('active',state.tab===tab);button.setAttribute('aria-selected',String(state.tab===tab));}$('#toolFilterRow').hidden=state.tab!=='tools';$('#toolSectionFilter').value=state.toolsFilter;renderList();renderForm();}
-function chooseTab(tab){if(state.busy||!['news','events','tools'].includes(tab)||tab===state.tab)return;if(!confirmDiscard())return;resetDraft();state.tab=tab;render();}
-function startEdit(id){if(state.busy||!confirmDiscard())return;resetDraft();state.editingId=id;render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});}
+function renderReorder(){
+ const toolsTab=state.tab==='tools',chosen=Boolean(SECTION_NAMES[state.toolsFilter]);
+ $('#reorderToolbar').hidden=!toolsTab||state.orderMode;
+ $('#openReorder').disabled=!chosen;
+ $('#reorderHint').textContent=chosen?'Les articles de « '+SECTION_NAMES[state.toolsFilter]+' » sont présentés dans l’ordre choisi.':'Choisis une rubrique dans le filtre pour définir l’ordre de ses articles.';
+ $('#reorderPanel').hidden=!state.orderMode;
+ $('#recordList').hidden=state.orderMode;
+ $('#newButton').hidden=state.orderMode;
+ $('#workspace').classList.toggle('reordering',state.orderMode);
+ if(!state.orderMode)return;
+ $('#reorderTitle').textContent='Ordre des articles — '+SECTION_NAMES[state.orderSection];
+ const panel=$('#reorderItems');panel.replaceChildren();
+ state.orderDraft.forEach((id,index)=>{
+  const item=state.records.tools.find(r=>r.id===id);if(!item)return;
+  const row=mk('div','reorder-item');
+  const number=mk('span','reorder-number',String(index+1));
+  const label=mk('span','reorder-label',item.title);
+  const buttons=mk('div','reorder-buttons');
+  for(const [direction,symbol,text,isDisabled] of [['up','↑','Monter',index===0],['down','↓','Descendre',index===state.orderDraft.length-1]]){
+   const button=mk('button','reorder-arrow',symbol);button.type='button';button.dataset.move=direction;button.dataset.id=id;
+   button.disabled=isDisabled||state.busy;button.title=text+' : '+item.title;button.setAttribute('aria-label',text+' « '+item.title+' »');buttons.append(button);
+  }
+  row.append(number,label,buttons);panel.append(row);
+ });
+ $('#saveReorder').disabled=!state.orderDirty||state.busy;
+}
+function startReorder(){
+ if(state.busy||state.tab!=='tools'||!SECTION_NAMES[state.toolsFilter])return;
+ if(state.dirty&&!confirmDiscard())return;
+ if(state.dirty)resetDraft();
+ state.orderMode=true;state.orderSection=state.toolsFilter;
+ state.orderDraft=orderedTools(state.records.tools,state.orderSection).map(r=>r.id);state.orderDirty=false;render();
+}
+function moveReorder(id,direction){
+ if(!state.orderMode||state.busy)return;
+ const i=state.orderDraft.indexOf(id),j=i+(direction==='up'?-1:direction==='down'?1:0);
+ if(i<0||j<0||j>=state.orderDraft.length||i===j)return;
+ [state.orderDraft[i],state.orderDraft[j]]=[state.orderDraft[j],state.orderDraft[i]];
+ state.orderDirty=true;renderReorder();
+}
+async function saveReorder(){
+ if(!state.orderMode||!state.orderDirty||state.busy)return;
+ const section=state.orderSection,ids=[...state.orderDraft];
+ if(ids.length!==orderedTools(state.records.tools,section).length||new Set(ids).size!==ids.length){message('Impossible de publier : la liste a changé. Actualise les contenus.','error');return;}
+ if(!confirm('Publier ce nouvel ordre pour « '+SECTION_NAMES[section]+' » sur GitHub ?'))return;
+ setBusy(true);
+ try{
+  await assertUnchanged('tools');
+  const positions=new Map(ids.map((id,index)=>[id,index]));
+  const updated=state.records.tools.map(record=>positions.has(record.id)?{...record,order:positions.get(record.id)}:record);
+  const sha=await writeRemote('tools',updated,state.sha.tools,'SNUDI FO 30 : nouvel ordre des contenus — '+SECTION_NAMES[section]);
+  state.sha.tools=sha;state.records.tools=updated;resetOrder();render();
+  message('Nouvel ordre enregistré sur GitHub. Il sera visible après le déploiement de GitHub Pages.','ok');
+ }catch(error){message(error.message,'error');}finally{setBusy(false);renderReorder();}
+}
+function render(){for(const tab of ['news','events','tools']){const button=$('#tab'+tab[0].toUpperCase()+tab.slice(1));button.classList.toggle('active',state.tab===tab);button.setAttribute('aria-selected',String(state.tab===tab));}$('#toolFilterRow').hidden=state.tab!=='tools';$('#toolSectionFilter').value=state.toolsFilter;renderList();renderForm();renderReorder();}
+function chooseTab(tab){if(state.busy||!['news','events','tools'].includes(tab)||tab===state.tab)return;if(!confirmDiscard()||!ensureReorderClosed())return;resetDraft();state.tab=tab;render();}
+function startEdit(id){if(state.busy||!confirmDiscard()||!ensureReorderClosed())return;resetDraft();state.editingId=id;render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});}
 function createRecord(form){const fd=new FormData(form),original=state.records[state.tab].find(x=>x.id===state.editingId);const r=original?{...original}:{};
  for(const f of FIELDS[state.tab]){
   const value=String(fd.get(f.key)||'').trim();
@@ -104,7 +175,15 @@ function createRecord(form){const fd=new FormData(form),original=state.records[s
  if(!r.title||((state.tab==='news'||state.tab==='events')&&!r.date)||((state.tab==='news'||state.tab==='tools')&&!r.summary))throw Error('Complète les champs obligatoires.');
  if(state.tab==='events'&&r.end&&r.end<r.date)throw Error('La date de fin précède la date de début.');
  if(state.tab==='tools'&&!SECTION_NAMES[r.section])throw Error('Choisis une rubrique valide.');
- if(state.tab==='tools')delete r.copyText; // Le contenu à copier doit toujours correspondre au texte actualisé de l'éditeur.
+ if(state.tab==='tools'){
+  delete r.copyText; // Le contenu à copier doit toujours correspondre au texte actualisé de l'éditeur.
+  // Les nouveaux contenus et les déplacements vers une autre rubrique arrivent en bas.
+  if(!original||original.section!==r.section){
+   const others=orderedTools(state.records.tools,r.section).filter(item=>item.id!==original?.id);
+   const maximum=others.reduce((max,item,index)=>Math.max(max,Number.isSafeInteger(item.order)&&item.order>=0?item.order:index),-1);
+   r.order=Math.max(others.length,maximum+1);
+  }
+ }
  r.id=original?.id||('pub-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8));return r;}
 async function writeRemote(type,records,sha,commit){const payload={message:commit,branch:state.branch,content:encode64(JSON.stringify(records,null,2)+'\n'),sha};const {response,result}=await api(PATHS[type],'PUT',payload);if(!response.ok){if(response.status===409||response.status===422)throw Error('Conflit : les contenus ont changé sur GitHub. Actualise-les avant de réessayer.');throw Error(`Publication impossible (HTTP ${response.status}) : ${result.message||'vérifie les permissions GitHub'}`);}return result.content?.sha||'';}
 async function assertUnchanged(type){const fresh=await readRemote(type);if(fresh.sha!==state.sha[type])throw Error('Une autre modification a été publiée sur GitHub. Recharge les contenus avant de recommencer.');}
@@ -155,14 +234,21 @@ async function removeRecord(id){if(state.busy||!confirmDiscard())return;const ty
  setBusy(true);try{await assertUnchanged(type);const before=[...state.records[type]],updated=before.filter(x=>x.id!==id);const sha=await writeRemote(type,updated,state.sha[type],`SNUDI FO 30 : suppression ${type==='news'?'actualité':type==='events'?'événement':'outil'} — ${old.title.slice(0,55)}`);state.sha[type]=sha;state.records[type]=updated;const cleanup=type!=='events'?await cleanUnusedMedia(before,updated):{errors:[]};resetDraft();render();message(cleanup.errors.length?'Publication supprimée. Certaines anciennes images restent à nettoyer sur GitHub.':'Suppression enregistrée sur GitHub.','ok');}catch(error){message(error.message,'error');}finally{setBusy(false);}}
 function previewArticle(){if(state.tab==='events')return;const f=$('#recordForm');const dialog=$('#previewDialog');$('#previewTitle').textContent=f.elements.title?.value||'Sans titre';$('#previewMeta').textContent=state.tab==='news'?`${f.elements.date?.value||today()} · ${f.elements.tag?.value||'Actualité'}`:SECTION_NAMES[f.elements.section?.value]||'Mes outils';$('#previewSummary').textContent=f.elements.summary?.value||'';const cover=state.coverDraft?.url||(!state.coverRemoved?SnudiArticle.asPath(state.records[state.tab].find(x=>x.id===state.editingId)?.cover||''):'');$('#previewCover').hidden=!cover;if(cover)$('#previewCover').src=cover;else $('#previewCover').removeAttribute('src');$('#previewBody').innerHTML=SnudiArticle.sanitize(draftHtml(),{allowBlobs:true});dialog.showModal();}
 function backup(){const content={generatedAt:new Date().toISOString(),news:state.records.news,events:state.records.events,tools:state.records.tools};const blob=new Blob([JSON.stringify(content,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sauvegarde-snudi-fo-30.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function disconnect(){if(state.busy||!confirmDiscard())return;resetDraft();state.token='';state.owner='';state.repo='';state.sha={news:'',events:'',tools:''};state.records={news:[],events:[],tools:[]};$('#workspace').hidden=true;$('#connection').hidden=false;$('#token').value='';message('Déconnecté. Le jeton n’a pas été conservé.');}
+function disconnect(){if(state.busy||!confirmDiscard()||!ensureReorderClosed())return;resetDraft();state.token='';state.owner='';state.repo='';state.sha={news:'',events:'',tools:''};state.records={news:[],events:[],tools:[]};$('#workspace').hidden=true;$('#connection').hidden=false;$('#token').value='';message('Déconnecté. Le jeton n’a pas été conservé.');}
 $('#connectForm').addEventListener('submit',connect);
 $('#recordForm').addEventListener('submit',publish);
 $('#tabNews').addEventListener('click',()=>chooseTab('news'));
 $('#tabEvents').addEventListener('click',()=>chooseTab('events'));
 $('#tabTools').addEventListener('click',()=>chooseTab('tools'));
-$('#toolSectionFilter').addEventListener('change',e=>{state.toolsFilter=e.target.value;renderList();if(!state.editingId&&!state.dirty)renderForm();});
-$('#newButton').addEventListener('click',()=>{if(state.busy||!confirmDiscard())return;resetDraft();render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});});
+$('#toolSectionFilter').addEventListener('change',e=>{
+ if(!ensureReorderClosed()){e.target.value=state.orderSection;return;}
+ state.toolsFilter=e.target.value;renderList();renderReorder();if(!state.editingId&&!state.dirty)renderForm();
+});
+$('#openReorder').addEventListener('click',startReorder);
+$('#cancelReorder').addEventListener('click',()=>{if(!ensureReorderClosed())return;render();});
+$('#saveReorder').addEventListener('click',saveReorder);
+$('#reorderItems').addEventListener('click',e=>{const b=e.target.closest('[data-move]');if(b)moveReorder(b.dataset.id,b.dataset.move);});
+$('#newButton').addEventListener('click',()=>{if(state.busy||!confirmDiscard()||!ensureReorderClosed())return;resetDraft();render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});});
 $('#recordForm').addEventListener('input',e=>{state.dirty=true;if(e.target.id==='richEditor')saveRange();});
 $('#recordForm').addEventListener('change',e=>{if(['coverFile','inlineImageInput','replaceInlineInput'].includes(e.target.id)){const file=e.target.files?.[0];if(e.target.id==='coverFile')selectCover(file);else insertInline(file,e.target.id==='replaceInlineInput');e.target.value='';}else state.dirty=true;});
 $('#recordForm').addEventListener('mousedown',e=>{if(e.target.closest('.rich-tool')){saveRange();e.preventDefault();}});
@@ -173,9 +259,9 @@ $('#recordForm').addEventListener('click',e=>{const cmd=e.target.closest('[data-
 $('#recordForm').addEventListener('mouseup',e=>{if(e.target.closest('#richEditor'))saveRange();});
 $('#recordForm').addEventListener('keyup',e=>{if(e.target.closest('#richEditor'))saveRange();});
 $('#recordList').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;if(b.dataset.action==='edit')startEdit(b.dataset.id);if(b.dataset.action==='delete')removeRecord(b.dataset.id);});
-$('#reloadButton').addEventListener('click',()=>{if(!confirmDiscard())return;reloadAll().catch(()=>{});});
+$('#reloadButton').addEventListener('click',()=>{if(!confirmDiscard()||!ensureReorderClosed())return;reloadAll().catch(()=>{});});
 $('#backupButton').addEventListener('click',backup);
 $('#disconnectButton').addEventListener('click',disconnect);
 $('#closePreview').addEventListener('click',()=>$('#previewDialog').close());
-window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
+window.addEventListener('beforeunload',e=>{if(state.dirty||state.orderDirty){e.preventDefault();e.returnValue='';}});
 autoSuggestRepo();

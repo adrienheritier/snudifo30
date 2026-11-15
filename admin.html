@@ -6,12 +6,12 @@
   <meta name="theme-color" content="#be081e">
   <meta name="robots" content="noindex,nofollow">
   <meta name="referrer" content="no-referrer">
-  <meta name="description" content="Édition des actualités et du calendrier SNUDI-FO 30.">
+  <meta name="description" content="Édition des actualités, du calendrier et des outils SNUDI-FO 30.">
   <link rel="icon" href="./assets/favicon-snudi-relief-48.png" type="image/png" sizes="48x48">
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./admin.css?v=3.1">
+  <link rel="stylesheet" href="./admin.css?v=3.3">
   <script defer src="./article-content.js?v=3.1"></script>
-  <script defer src="./admin.js?v=3.1"></script>
+  <script defer src="./admin.js?v=3.3"></script>
   <title>Administration — SNUDI-FO 30</title>
 </head>
 <body class="admin-body">
@@ -38,7 +38,7 @@
       <div><span class="eyebrow">Dépôt connecté</span><h1 id="repositoryTitle">Administration</h1><p id="repositorySubtitle" class="muted"></p></div>
       <div class="flex-wrap"><button id="reloadButton" class="btn btn-outline" type="button">Actualiser les contenus</button><button id="backupButton" class="btn btn-neutral" type="button">Exporter une sauvegarde</button><button id="disconnectButton" class="btn btn-neutral" type="button">Déconnexion</button></div>
     </div>
-    <div class="notice neutral" style="margin:16px 0"><b>V3.1 : les actualités et les quatre rubriques « Mes outils » sont modifiables avec images et mise en forme.</b> Chaque publication crée un commit GitHub. Les collègues voient le nouveau contenu après le déploiement de GitHub Pages et une actualisation de l’application. Il n’y a pas de publication immédiate sur un serveur distinct.</div>
+    <div class="notice neutral" style="margin:16px 0"><b>V3.3 : les actualités, le calendrier et les quatre rubriques « Mes outils » sont administrables. L’ordre des articles de chaque rubrique est maintenant personnalisable.</b> Chaque publication crée un commit GitHub. Les collègues voient le nouveau contenu après le déploiement de GitHub Pages et une actualisation de l’application. Il n’y a pas de publication immédiate sur un serveur distinct.</div>
     <div id="workingIndicator" class="notice neutral" hidden aria-live="polite">Publication en cours : ne ferme pas cette page pendant le transfert des images et des textes.</div>
     <div class="admin-tabs" role="tablist" aria-label="Rubrique à administrer">
       <button type="button" id="tabNews" data-tab="news" role="tab" aria-selected="true" class="active">Actualités</button>
@@ -57,6 +57,19 @@
             <option value="documents">Documents utiles</option>
           </select>
         </label>
+        <div id="reorderToolbar" class="reorder-toolbar" hidden>
+          <p id="reorderHint" class="field-hint">Sélectionne une rubrique pour organiser ses contenus.</p>
+          <button id="openReorder" type="button" class="btn btn-outline btn-sm">↕ Gérer l’ordre des articles</button>
+        </div>
+        <div id="reorderPanel" class="reorder-panel" hidden>
+          <h3 id="reorderTitle">Organiser les contenus</h3>
+          <p class="field-hint">Utilise les flèches pour déplacer les articles, puis clique sur « Publier cet ordre ». La modification sera visible par tous après le déploiement GitHub Pages.</p>
+          <div id="reorderItems" class="reorder-items" aria-live="polite"></div>
+          <div class="reorder-actions">
+            <button id="saveReorder" type="button" class="btn btn-primary btn-sm" disabled>Publier cet ordre sur GitHub</button>
+            <button id="cancelReorder" type="button" class="btn btn-neutral btn-sm">Annuler</button>
+          </div>
+        </div>
         <div id="recordList" class="admin-records"></div>
       </section>
       <section class="card admin-editor" aria-label="Éditeur de contenu">

@@ -1,4 +1,4 @@
-const CACHE_NAME = 'snudifo30-v3.2-page-adhesion';
+const CACHE_NAME = 'snudifo30-v3.3-ordre-outils';
 const APP_FILES = ['./','./index.html','./styles.css','./app.js','./article-content.js','./manifest.webmanifest','./content/news.json','./content/events.json','./content/tools.json','./assets/logo-snudi-original.jpg','./assets/icon-snudi-relief-192.png','./assets/icon-snudi-relief-512.png','./assets/icon-snudi-relief-maskable-512.png','./assets/apple-touch-icon-snudi-relief-180.png','./assets/favicon-snudi-relief-48.png'];
 self.addEventListener('install', event => {
  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));

@@ -211,7 +211,13 @@ const TOOL_SECTIONS={
  fiches:{title:'Fiches pratiques',intro:'Informations syndicales et réglementaires à vérifier dans leur version à jour.',icon:'book'},
  documents:{title:'Documents utiles',intro:'Textes de référence, liens et ressources syndicales.',icon:'file'}
 };
-function toolItems(section){return data.tools.filter(r=>r.section===section);}
+function toolItems(section){
+ return data.tools.filter(r=>r.section===section).map((record,index)=>({record,index})).sort((a,b)=>{
+  const av=Number.isSafeInteger(a.record.order)&&a.record.order>=0?a.record.order:a.index;
+  const bv=Number.isSafeInteger(b.record.order)&&b.record.order>=0?b.record.order:b.index;
+  return av-bv||a.index-b.index;
+ }).map(({record})=>record);
+}
 function toolItemCard(r){const cover=SnudiArticle.asPath(r.cover||'');return `<button class="card rowcard clickable tool-item-card" data-action="nav" data-page="outil-detail" data-id="${esc(r.id)}" style="width:100%;text-align:left">${cover?`<img class="tool-item-thumb" src="${esc(cover)}" alt="" loading="lazy">`:`<span class="row-icon">${ico(TOOL_SECTIONS[r.section]?.icon||'file',22)}</span>`}<span class="card-body"><h3>${esc(r.title)}</h3><p>${esc(r.summary||'')}</p></span>${ico('chevron',18)}</button>`;}
 function renderTools(){return `${heading('Mes outils','Quatre rubriques pratiques, mises à jour par le SNUDI-FO 30.')}<div class="stack"><div class="grid-two">${toolCard('Barème mouvement','Calculer et vérifier son barème','chart','bareme',true)}${toolCard('Modèles de courriers','Consulter et copier un modèle','document','modeles')}${toolCard('Fiches pratiques','Comprendre ses droits et démarches','book','fiches')}${toolCard('Documents utiles','Textes et ressources à consulter','file','documents')}</div>${btn(`${ico('phone',18)} Contacter le SNUDI FO`,'nav:contact','btn btn-primary btn-block')}</div>`;}
 function renderToolSection(section){const info=TOOL_SECTIONS[section];if(!info)return empty('Rubrique introuvable','Cette catégorie n’existe pas.');let items=toolItems(section);let controls='';
