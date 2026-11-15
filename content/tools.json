@@ -193,9 +193,11 @@
     "id": "d5",
     "section": "documents",
     "title": "Décret sur les obligations de service",
-    "summary": "Ressource de référence à consulter.",
-    "bodyHtml": "<p>Ouvrez la ressource pour consulter la version publiée par son éditeur.</p>",
-    "url": "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000034326444/"
+    "summary": "Obligations de services des Professeurs des Ecoles",
+    "bodyHtml": "<p><br></p>",
+    "url": "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000034326444/",
+    "tag": "",
+    "cover": "./media/outils/mwi23p1h-3hi2fr7v66-couverture.webp"
   },
   {
     "id": "d6",
