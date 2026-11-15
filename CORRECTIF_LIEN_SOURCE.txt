@@ -1,0 +1,21 @@
+SNUDI-FO 30 — Correctif V3.0.1 — Lien source facultatif
+
+Contenu de l'archive :
+  admin.html
+  admin.js
+
+Installation dans le dépôt GitHub adrienheritier/snudifo30 :
+  1. Ouvrir le dépôt sur GitHub.
+  2. À la racine, remplacer admin.html et admin.js par les deux fichiers contenus dans ce ZIP.
+  3. Enregistrer la modification (commit) sur la branche main.
+  4. Attendre la mise en ligne GitHub Pages, puis recharger la page admin.html (Ctrl+Maj+R sur ordinateur si nécessaire).
+
+Ne pas remplacer les dossiers content/ et media/ : aucune donnée publiée n'est modifiée par ce correctif.
+
+Comportement corrigé :
+  - lien source laissé vide : publication autorisée ; aucun lien affiché sur l'article ;
+  - lien source renseigné : HTTPS obligatoire et adresse valide ;
+  - suppression d'un lien existant lors d'une modification : l'ancien lien est retiré ;
+  - même correction sur les liens facultatifs des événements du calendrier.
+
+Ce correctif n'affecte pas les autres fonctionnalités de la V3. Ton jeton GitHub actuel reste utilisable.

@@ -50,8 +50,8 @@ function mk(tag,cls='',txt=''){const el=document.createElement(tag);if(cls)el.cl
 function field(f,value){const wrap=mk('div','form-control');const label=mk('label','',f.label+(f.required?' *':''));label.htmlFor='field_'+f.key;wrap.append(label);let input;
  if(f.type==='textarea'){input=mk('textarea');input.rows=4;input.placeholder=f.placeholder||'';input.value=value||'';}
  else if(f.type==='select'){input=mk('select','input');const vals=[...(f.options||[])];if(value&&!vals.includes(value))vals.push(value);vals.forEach(v=>{const o=mk('option','',v);o.value=v;input.append(o);});input.value=value||vals[0]||'';}
- else {input=mk('input','input');input.type=f.type;input.placeholder=f.placeholder||'';input.value=value||'';}
- input.id='field_'+f.key;input.name=f.key;input.required=Boolean(f.required);wrap.append(input);return wrap;}
+ else {input=mk('input','input');input.type=f.type==='url'?'text':f.type;input.placeholder=f.placeholder||'';input.value=value||'';if(f.type==='url'){input.inputMode='url';input.autocomplete='off';input.spellcheck=false;input.autocapitalize='none';}}
+ input.id='field_'+f.key;input.name=f.key;input.required=Boolean(f.required);wrap.append(input);if(f.type==='url'&&!f.required)wrap.append(mk('p','field-hint','Facultatif : laisse ce champ vide si tu n’as pas de lien à ajouter.'));return wrap;}
 function usedPaths(record){const results=new Set();if(!record||typeof record!=='object')return results;const cover=SnudiArticle.asPath(record.cover||'');if(cover)results.add(cover);SnudiArticle.imagePaths(record.bodyHtml||'').forEach(p=>results.add(p));return results;}
 function resetDraft(){for(const url of state.pendingMedia.keys())URL.revokeObjectURL(url);state.pendingMedia.clear();if(state.coverDraft){URL.revokeObjectURL(state.coverDraft.url);state.coverDraft=null;}state.coverRemoved=false;state.editorRange=null;state.selectedImage=null;state.dirty=false;state.editingId=null;}
 function confirmDiscard(){return !state.dirty||confirm('Les modifications de ce formulaire ne sont pas publiées. Les abandonner ?');}
@@ -83,7 +83,20 @@ function render(){const isNews=state.tab==='news';$('#tabNews').classList.toggle
 function chooseTab(tab){if(state.busy||!['news','events'].includes(tab)||tab===state.tab)return;if(!confirmDiscard())return;resetDraft();state.tab=tab;render();}
 function startEdit(id){if(state.busy||!confirmDiscard())return;resetDraft();state.editingId=id;render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});}
 function createRecord(form){const fd=new FormData(form),original=state.records[state.tab].find(x=>x.id===state.editingId);const r=original?{...original}:{};
- for(const f of FIELDS[state.tab])r[f.key]=String(fd.get(f.key)||'').trim();if(!r.date||!r.title||(state.tab==='news'&&!r.summary))throw Error('Complète les champs obligatoires.');if(state.tab==='events'&&r.end&&r.end<r.date)throw Error('La date de fin précède la date de début.');const urlField=state.tab==='news'?'url':'source';if(r[urlField]&&!/^https:\/\/\S+$/i.test(r[urlField]))throw Error('Les liens doivent commencer par https://.');r.id=original?.id||('pub-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8));return r;}
+ for(const f of FIELDS[state.tab]){
+  const value=String(fd.get(f.key)||'').trim();
+  if(f.type==='url'){
+   // Un lien facultatif vide doit être absent des données, jamais bloquer la publication.
+   if(!value){delete r[f.key];continue;}
+   let valid=false;
+   try{const parsed=new URL(value);valid=parsed.protocol==='https:'&&parsed.hostname.includes('.');}catch{}
+   if(!valid)throw Error(`Le champ « ${f.label} » doit contenir une adresse HTTPS valide ou rester vide.`);
+  }
+  r[f.key]=value;
+ }
+ if(!r.date||!r.title||(state.tab==='news'&&!r.summary))throw Error('Complète les champs obligatoires.');
+ if(state.tab==='events'&&r.end&&r.end<r.date)throw Error('La date de fin précède la date de début.');
+ r.id=original?.id||('pub-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8));return r;}
 async function writeRemote(type,records,sha,commit){const payload={message:commit,branch:state.branch,content:encode64(JSON.stringify(records,null,2)+'\n'),sha};const {response,result}=await api(PATHS[type],'PUT',payload);if(!response.ok){if(response.status===409||response.status===422)throw Error('Conflit : les contenus ont changé sur GitHub. Actualise-les avant de réessayer.');throw Error(`Publication impossible (HTTP ${response.status}) : ${result.message||'vérifie les permissions GitHub'}`);}return result.content?.sha||'';}
 async function assertUnchanged(type){const fresh=await readRemote(type);if(fresh.sha!==state.sha[type])throw Error('Une autre modification a été publiée sur GitHub. Recharge les contenus avant de recommencer.');}
 function photoId(){return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12);}
