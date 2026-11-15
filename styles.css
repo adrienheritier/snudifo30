@@ -64,10 +64,12 @@
 .join-final .btn-yellow{color:#2a2220}.join-final .join-privacy{font-size:.74rem;color:#ffe9ec;margin:12px 0 0}
 @media(max-width:600px){.join-reasons{grid-template-columns:1fr}.join-hero{padding:21px 18px}.join-final{padding:19px 17px}}
 
-/* V3.4 — Bandeau administrable en tête d'accueil */
+/* V3.5 — Bandeau non cliquable en tête d'accueil */
 .home-banner{margin:0;position:relative;overflow:hidden;border-radius:17px;background:#fff;border:1px solid var(--line);box-shadow:var(--shadow)}
-.home-banner a{display:block;line-height:0}
 .home-banner img{width:100%;height:auto;display:block;object-fit:contain}
-.home-banner-zoom{display:flex;align-items:center;justify-content:flex-end;gap:5px;padding:6px 10px;color:var(--red);background:#fff;font-size:.71rem}
 .home-help-last{margin-top:8px}
-@media(max-width:530px){.home-banner{border-radius:12px}.home-banner-zoom{font-size:.65rem;padding:5px 8px}}
+@media(max-width:530px){.home-banner{border-radius:12px}}
+
+/* V3.5 — Accès rapides uniformes (blanc et rouge) */
+.grid-three .tile{background:#fff;border-color:var(--line)}
+.grid-three .tile .tile-icon{background:var(--red-soft);color:var(--red)}
