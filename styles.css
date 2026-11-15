@@ -6,3 +6,18 @@
 @media (min-width:1000px){.layout{display:grid;grid-template-columns:254px minmax(0,1fr)}.desktop-sidebar{position:sticky;top:0;height:100vh;background:white;border-right:1px solid var(--line);display:flex;flex-direction:column;gap:8px;padding:26px 15px}.sidebar-logo{width:130px;margin:4px auto 0}.sidebar-tag{text-align:center;font-size:.78rem;color:var(--muted);margin-bottom:15px}.side-button{width:100%;border:0;background:transparent;padding:12px 14px;border-radius:13px;color:#4d505a;display:flex;gap:13px;align-items:center;font-size:.88rem;text-align:left;font-weight:750}.side-button.active,.side-button:hover{background:var(--red-soft);color:var(--red)}.sidebar-bottom{margin-top:auto;padding:12px;border-radius:14px;background:var(--yellow-soft);font-size:.76rem}.mobile-top{height:75px;position:relative}.main{max-width:980px}.bottom-nav{display:none}}
 @media (max-width:359px){.bottom-nav button{min-width:48px;font-size:.61rem}.main{padding:16px 12px 108px}.hero{padding:18px}.tile{padding:14px 11px}.tile strong{font-size:.82rem}}
 @media (prefers-reduced-motion:reduce){*{scroll-behavior:auto!important;transition:none!important}}
+
+/* V2 — identité visuelle rouge pour les barres de navigation */
+.mobile-top{background:var(--red);color:#fff;box-shadow:0 3px 14px rgba(118,0,14,.14)}
+.mobile-top .top-name span{color:#fff0f0}
+.mobile-top .top-logo{background:#fff;padding:3px;border-radius:9px}
+.mobile-top .icon-btn{background:rgba(255,255,255,.14);color:#fff;border-color:rgba(255,255,255,.28)}
+.mobile-top .icon-btn:hover{color:var(--yellow);border-color:var(--yellow)}
+.notification-dot{background:var(--yellow);border-color:var(--red)}
+.bottom-nav{background:var(--red);border-top-color:var(--red-dark);box-shadow:0 -8px 25px rgba(96,0,16,.16)}
+.bottom-nav button{color:#fff}
+.bottom-nav button.active{color:var(--yellow);background:rgba(255,255,255,.08);border-radius:10px}
+.bottom-nav button:focus-visible,.filter-pill:focus-visible{outline:2px solid var(--yellow);outline-offset:1px}
+.calendar-filters{margin-bottom:0;flex-wrap:nowrap}
+.calendar-filters .filter-pill.active{background:var(--red);color:#fff}
+.article-content{white-space:pre-wrap;line-height:1.75;font-size:.96rem;overflow-wrap:anywhere;border-top:1px solid var(--line);padding-top:16px}

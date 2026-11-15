@@ -1,0 +1,90 @@
+[
+  {
+    "id": "e1",
+    "date": "2026-11-19",
+    "time": "",
+    "end": "",
+    "title": "Journée FNEC-FP FO 30 — Inclusion",
+    "type": "Formation",
+    "place": "Gard — lieu et horaires à confirmer",
+    "status": "À confirmer",
+    "source": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie"
+  },
+  {
+    "id": "e2",
+    "date": "2026-11-25",
+    "time": "12:00",
+    "end": "",
+    "title": "Fin de saisie des vœux : mouvement interdépartemental",
+    "type": "Échéance",
+    "place": "SIAM / I-Prof — heure de Paris",
+    "status": "Confirmé",
+    "source": "https://www.education.gouv.fr/mutation-des-personnels-enseignants-du-premier-degre-5498"
+  },
+  {
+    "id": "e3",
+    "date": "2026-12-03",
+    "time": "",
+    "end": "",
+    "title": "Formation syndicale « PE : connaître ses droits » (jour 1)",
+    "type": "Formation",
+    "place": "Gard — lieu et horaires à confirmer",
+    "status": "À confirmer",
+    "source": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie"
+  },
+  {
+    "id": "e4",
+    "date": "2026-12-03",
+    "time": "",
+    "end": "2026-12-10",
+    "title": "Élections professionnelles 2026",
+    "type": "Élections",
+    "place": "Vote électronique",
+    "status": "Calendrier à vérifier avant diffusion",
+    "source": ""
+  },
+  {
+    "id": "e5",
+    "date": "2026-12-04",
+    "time": "",
+    "end": "",
+    "title": "Formation syndicale « PE : connaître ses droits » (jour 2)",
+    "type": "Formation",
+    "place": "Gard — lieu et horaires à confirmer",
+    "status": "À confirmer",
+    "source": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie"
+  },
+  {
+    "id": "e6",
+    "date": "2026-12-07",
+    "time": "",
+    "end": "",
+    "title": "Formation syndicale « AESH : connaître ses droits »",
+    "type": "Formation",
+    "place": "Gard — lieu et horaires à confirmer",
+    "status": "À confirmer",
+    "source": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie"
+  },
+  {
+    "id": "e7",
+    "date": "2027-01-13",
+    "time": "",
+    "end": "",
+    "title": "Ouverture de la vérification des barèmes interdépartementaux",
+    "type": "Échéance",
+    "place": "SIAM / I-Prof",
+    "status": "Confirmé",
+    "source": "https://www.education.gouv.fr/mutation-des-personnels-enseignants-du-premier-degre-5498"
+  },
+  {
+    "id": "e8",
+    "date": "2027-01-27",
+    "time": "",
+    "end": "",
+    "title": "Dernier jour pour demander une correction de barème",
+    "type": "Échéance",
+    "place": "DSDEN de rattachement",
+    "status": "Confirmé",
+    "source": "https://www.education.gouv.fr/mutation-des-personnels-enseignants-du-premier-degre-5498"
+  }
+]

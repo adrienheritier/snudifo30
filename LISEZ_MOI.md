@@ -1,56 +1,75 @@
-# SNUDI-FO 30 — application web pilote (V1)
+# SNUDI-FO 30 — V2 (application + espace administrateur GitHub)
 
-Application web progressive (PWA) **fonctionnelle et installable** pour les collègues du premier degré du Gard. Le logo utilisé est le fichier officiel fourni, conservé comme tel dans `assets/logo-snudi-original.jpg`.
+Cette archive contient **l’application publique installable** (PWA) et **un espace d’administration distinct**. Elle est conçue pour être hébergée sur **GitHub Pages**. Le logo SNUDI-FO est conservé tel qu'il a été fourni.
 
-## Rubriques disponibles
+## Changements de cette version
 
-- **Accueil** : liens rapides, dernières publications et prochaines dates.
-- **Actualités** : publications réelles du site départemental, catégories, recherche, liens vers les articles sources.
-- **Calendrier** : agenda et vue mensuelle, ajout d'un événement au calendrier via `.ics`.
-- **Mes droits** : 12 fiches de référence, avec recherche, filtres, favoris, sources réglementaires ou institutionnelles et orientation vers le syndicat.
-- **Accompagnement** : choix du type de difficulté, conseils de premier niveau et préparation d'un courriel au SNUDI-FO 30 dans l'application de messagerie de l'utilisateur.
-- **Outils** : accès au comparateur officiel de mobilité, 5 modèles de courriers à copier ou envoyer, checklist, ressources de carrière et documents utiles.
-- **Contact et adhésion** : appel téléphonique et courriel à partir des coordonnées officielles vérifiées, adresse, site, lien d'adhésion.
-- **Carte scolaire** : recherche d'écoles documentées, lien source, possibilité de signaler une situation ; **la base est volontairement non exhaustive**.
-- **Notifications internes** : nouveautés présentes dans l’application et préférences par thème. Pas de push distant dans cette version.
-- **Administration locale** : ajouter, modifier et supprimer des actus, événements, fiches, écoles, courriers ; personnaliser les coordonnées ; sauvegarder/restaurer les données par export/import JSON.
+- Entête supérieur rouge et navigation inférieure rouge ; onglet actif en jaune.
+- Suppression de l'écran et des accès autonomes « Carte scolaire » ; les articles « Carte scolaire » restent dans **Actualités** et peuvent être recherchés/filtrés.
+- Calendrier : filtres **Tous, Formation, Échéance, Élections, RIS, Instance, Mobilisation, Autre** (ainsi que les catégories ajoutées ensuite). Les filtres s'appliquent à l'agenda **et** à la vue mensuelle.
+- Suppression de l'ancienne « administration locale » de l'application publique.
+- Nouveaux fichiers partagés `content/news.json` et `content/events.json`, lus par l'application à chaque ouverture en ligne.
+- Nouveau **`admin.html`** : ajouter, modifier, supprimer des actualités ou des dates, et les publier directement sur GitHub. Pour une actualité, un article complet peut être affiché dans l'application, pas seulement un lien vers un site extérieur.
 
-## Mise en ligne sur GitHub Pages
+## Publier l'application sur GitHub Pages
 
-1. Décompresser le ZIP **sur l'ordinateur**.
-2. Dans le dépôt GitHub destiné à l'application, placer à la **racine** : `index.html`, `app.js`, `styles.css`, `manifest.webmanifest`, `sw.js`, `LISEZ_MOI.md` ainsi que le **dossier entier `assets`**.
-3. Vérifier que le fichier `assets/logo-snudi-original.jpg` est bien présent dans GitHub (le chemin doit rester intact).
-4. Dans `Settings > Pages`, choisir `Deploy from a branch`, la branche `main` et le dossier `/ (root)`, puis enregistrer.
-5. Ouvrir `https://VOTRE-COMPTE.github.io/NOM-DU-DEPOT/` pour vérifier les écrans.
-6. Sur iPhone, ouvrir l'adresse dans **Safari** > **Partager** > **Sur l'écran d'accueil**. Sur Android, utiliser le menu **Installer** si proposé.
+1. **Décompresser** l'archive `.zip` sur l'ordinateur.
+2. Copier **tous les fichiers et dossiers contenus** dans le dépôt GitHub, directement **à la racine** :
+   - `index.html`, `app.js`, `styles.css`, `sw.js`, `manifest.webmanifest` ;
+   - `admin.html`, `admin.js`, `admin.css` ;
+   - `content` **avec** les deux fichiers JSON ;
+   - `assets` **avec** les logos et icônes.
+3. Sur GitHub : `Settings → Pages → Build and deployment → Deploy from a branch`, sélectionner la branche `main` et `/ (root)`.
+4. L'application sera disponible à `https://NOM-UTILISATEUR.github.io/NOM-DU-DEPOT/`.
+5. L'administration sera à `https://NOM-UTILISATEUR.github.io/NOM-DU-DEPOT/admin.html`. **Cette page n’apparaît pas dans le menu des collègues.**
 
-Pour éviter les problèmes d'upload de dossiers, l'utilisation de **GitHub Desktop** est conseillée : copier tout le contenu décompressé dans le répertoire du dépôt, puis valider/publier les modifications. Le ZIP lui-même ne doit pas être envoyé comme unique fichier dans le dépôt.
+Pour remplacer la V1, il faut **ajouter les nouveaux fichiers** `admin.*` et le dossier `content`, et **remplacer les fichiers V1** concernés. Vérifier ensuite l'onglet Actions ou la page Deployments du dépôt pour suivre la publication. Le ZIP lui-même ne doit pas être l'unique fichier téléversé dans GitHub.
 
-## Prévisualisation immédiate
+## Première connexion à l’administration
 
-Le fichier distinct `SNUDI_FO_30_demo.html` fourni à côté du ZIP est une version **autonome, en un seul fichier**, pratique pour tester les écrans localement. Il n'est pas une PWA complète : pour l'installation avec gestion hors connexion, utiliser les fichiers du ZIP sur un hébergement HTTPS.
+L'administration fonctionne une fois les fichiers **mis en ligne** sur GitHub Pages. Elle ne peut pas publier dans un dépôt GitHub simplement parce qu'on ouvre une copie HTML hors ligne sur son ordinateur.
 
-## Informations et limites importantes
+1. Connectez-vous à votre **compte GitHub qui dispose des droits d'écriture sur le dépôt**.
+2. Dans GitHub, ouvrez <https://github.com/settings/personal-access-tokens> (jetons d'accès personnels **à granularité fine**).
+3. Créez un jeton **limité uniquement au dépôt de l'application**, avec la permission de dépôt **Contents → Read and write**. Ne donnez pas d'autres droits si ce n'est pas nécessaire. Fixez une durée d'expiration raisonnable. Certaines organisations GitHub peuvent exiger une autorisation supplémentaire.
+4. Ouvrez `admin.html` sur l'adresse GitHub Pages et renseignez :
+   - **Propriétaire GitHub** : nom du compte ou de l'organisation qui possède le dépôt ;
+   - **Dépôt** : nom exact du dépôt GitHub (sans `.git`) ;
+   - **Branche** : généralement `main` ;
+   - **Jeton** : le jeton créé à l'étape 3.
+5. Cliquez sur **Se connecter au dépôt**. Les publications existantes seront chargées depuis GitHub.
 
-1. **Les articles sont une photographie datée des dernières publications identifiées** : ils ne sont pas synchronisés automatiquement. Cliquer sur les liens pour les versions en ligne.
-2. **Les formations annoncées comme « À confirmer » nécessitent validation** des horaires et lieux avant toute diffusion officielle. La plupart des dates administratives sont reliées à la page ministérielle.
-3. **Le simulateur intra-départemental du Gard n'est pas implémenté** : cela nécessiterait les règles annuelles validées. Le comparateur interministériel officiel est proposé pour les mutations interdépartementales.
-4. **Le simulateur de salaire n'est pas implémenté** : éviter un chiffrage faux ou périmé ; liens vers les services officiels.
-5. **Aucune notification push réelle** : demande un service serveur et des mécanismes d'abonnement sécurisés.
-6. **Pas de comptes utilisateurs, ni de base de dossiers syndicaux**, ni de stockage côté serveur. Le formulaire d'accompagnement prépare un `mailto:` ; l'envoi dépend du logiciel de messagerie installé.
-7. **Administration seulement locale** : les modifications restent sur le navigateur qui les effectue. Un export JSON sert à transmettre une version des contenus à la personne chargée de la prochaine publication. Pour alimenter tous les utilisateurs en temps réel, prévoir un petit back-office connecté à une base/API et un système de publication validé.
-8. Les fiches de droits sont **des synthèses d'orientation** ; vérification juridique et éditoriale par l'équipe syndicale requise avant toute publication destinée au public.
-9. Éviter tout dépôt de données médicales, d'identification d'élèves, ou de pièces nominatives dans un futur espace public. Préparer conformité RGPD et confidentialité avant de créer des comptes/dossiers.
+**Sécurité importante :** `admin.html` est une page publique à laquelle toute personne connaissant l'adresse peut accéder ; **seules les personnes disposant d'un jeton GitHub autorisé peuvent modifier le dépôt**. Le jeton n'est stocké ni dans un fichier de l'application, ni dans `localStorage`, ni dans `sessionStorage`. Il demeure uniquement en mémoire dans l'onglet ouvert et est effacé à la déconnexion ou fermeture de la page. Ne jamais publier ou partager un jeton. Un jeton compromis doit être révoqué immédiatement dans GitHub. Pour une administration multi-personnes plus confortable, une authentification OAuth avec service dédié pourra être intégrée ultérieurement.
 
-## Sources de départ (consultées le 15 novembre 2026)
+## Publier une actualité
 
-- Coordonnées et publications du syndicat : https://snudi30.force-ouvriere.org/
-- Adhésion : https://snudi30.force-ouvriere.org/-adhesion-
-- Mutations 2027 : https://www.education.gouv.fr/mutation-des-personnels-enseignants-du-premier-degre-5498
-- Comparateur officiel : https://info-mutations.phm.education.gouv.fr/cmpmo-front/
-- Obligations de service : https://www.legifrance.gouv.fr/loda/id/LEGITEXT000034326444/
-- Guide national AESH : https://www.education.gouv.fr/etre-accompagnant-des-eleves-en-situation-de-handicap-aesh-12188
+1. Dans l'administration, sélectionnez **Actualités** puis **+ Nouveau**.
+2. Renseignez **date**, **catégorie**, **titre**, **résumé** ; éventuellement un **article complet** et/ou un **lien source HTTPS**.
+3. Cliquez sur **Publier sur GitHub**, confirmez. L'administration crée un commit qui modifie `content/news.json`.
+4. Après le déploiement GitHub Pages, ouvrez l'application et actualisez la page pour voir la nouvelle actualité. L'application charge `news.json` depuis l'hébergement et l'affiche dans Actualités et sur l'accueil.
 
-## Prochaines étapes de développement
+## Publier un événement
 
-Connecter un flux éditorial contrôlé (actualités, agendas), intégrer le calculateur intra Gard avec paramètres de campagne vérifiés, enrichir les fiches de droits, installer des notifications distantes si nécessaires, et réserver un environnement sécurisé distinct aux dossiers individuels.
+1. Sélectionnez **Calendrier** puis **+ Nouveau**.
+2. Saisissez la date, éventuellement l'heure ou une date de fin, choisissez une **catégorie de filtre**, précisez le lieu, le statut et éventuellement une source.
+3. Cliquez sur **Publier sur GitHub**, confirmez. L'administration modifie `content/events.json`.
+4. Après le déploiement, la date sera visible dans le calendrier et sous le filtre correspondant. L'application permet toujours de télécharger un événement au format `.ics`.
+
+**Modifier ou supprimer** : utiliser les boutons en face des contenus existants dans l'administration. Une nouvelle version est publiée à chaque fois. Si un autre administrateur a modifié le même fichier entre-temps, le contrôle par identifiant `sha` bloque l'écrasement et demande de rafraîchir les données.
+
+## Limites et vérifications avant diffusion
+
+- L'administration requiert un **compte GitHub autorisé** et un **jeton à droits limités** ; pas de simple couple identifiant/mot de passe local.
+- **Aucun envoi de notification push**, même lorsqu'une actualité est publiée ; les collègues doivent ouvrir ou actualiser l'application pour obtenir les nouveautés.
+- Le **déploiement GitHub Pages n'est pas instantané**. Les modifications sont enregistrées dans le dépôt au moment du message de succès ; elles apparaissent dans l'application lorsque GitHub a déployé les nouveaux fichiers.
+- Les données de départ (`content/*.json`) sont **un jeu de publications initial**, daté. Les dates, horaires et fiches de droit doivent être revalidés par le bureau avant une diffusion officielle ; les entrées « À confirmer » ne sont pas des convocations.
+- Seuls les **actualités et événements** sont modifiables dans cet espace administrateur. Les fiches de droits et les courriers sont actuellement définis dans `app.js` et demandent une mise à jour du code.
+- Pas de dépôt de dossiers personnels, certificats médicaux ni informations nominatives sensibles dans l'administration : tout contenu publié devient accessible publiquement.
+- Le formulaire « J'ai un problème » prépare un courriel ; il ne conserve pas de dossier individuel et ne transmet pas automatiquement les réponses.
+- `SNUDI_FO_30_V2_demo.html` (fourni à côté du ZIP) sert exclusivement à une consultation **hors ligne** de la partie publique ; il ne publie rien sur GitHub.
+
+## Références techniques
+
+L'administration utilise l'API officielle **GitHub REST — Create or update file contents** avec un jeton à granularité fine disposant de `Contents: write` : <https://docs.github.com/en/rest/repos/contents>.
+
+**Conseil pratique** : avant toute annonce d'une nouvelle formation ou échéance, vérifier sa date, son lieu, son horaire, son statut et l'exactitude des liens à partir de la source officielle ou syndicale concernée.
