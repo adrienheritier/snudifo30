@@ -74,3 +74,15 @@
 #workspace.reordering .admin-editor{display:none}
 #workspace.reordering .admin-list{max-width:900px;width:100%;margin-inline:auto}
 @media(max-width:520px){.reorder-item{gap:7px}.reorder-arrow{width:39px;height:39px}.reorder-panel{padding:10px}}
+
+/* V3.4 — Gestion du bandeau de l’accueil */
+#adminContentGrid[hidden],#homeBannerAdmin[hidden]{display:none!important}
+.home-admin-card{padding:24px;max-width:930px;margin:0 auto 20px}
+.home-admin-card h2{margin:8px 0 10px;font-size:1.5rem}
+.home-admin-card>.muted{max-width:750px;line-height:1.55}
+.home-banner-preview{display:grid;place-items:center;background:#f5f6f8;border:1px dashed #d1d5df;overflow:hidden;border-radius:15px;min-height:125px;margin:18px 0}
+.home-banner-preview img{width:100%;height:auto;max-height:430px;object-fit:contain;display:block}
+.home-banner-preview img[hidden],.home-banner-preview p[hidden]{display:none}
+.home-admin-form{display:grid;gap:14px}.home-admin-form .form-control{display:grid;gap:7px}
+.home-admin-form .flex-wrap{gap:10px}
+@media(max-width:650px){.admin-tabs{overflow:auto}.admin-tabs button{white-space:nowrap;padding:10px 12px}.home-admin-card{padding:17px}}

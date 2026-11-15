@@ -49,16 +49,22 @@ const deepClone=x=>JSON.parse(JSON.stringify(x));
 function readStore(key,fallback){try{let obj=JSON.parse(localStorage.getItem(key));return obj&&typeof obj==='object'?obj:fallback;}catch{return fallback;}}
 let data=deepClone(DEMO_DATA);
 data.tools=[];
+data.home={banner:'./assets/bandeau-elections-2026.png',alt:'Élections professionnelles du 3 au 10 décembre 2026 : je vote SNUDI-FO 30 et FNEC FP-FO 30'};
 let settings=readStore(SETTINGS_KEY,{favorites:[],alerts:['Carte scolaire','AESH','Échéance'],seenNews:[],font:'normal'});
 let ui={newsFilter:'Toutes',newsQuery:'',rightsFilter:'Tous',rightsQuery:'',calendarView:'agenda',calendarFilter:'Tous',month:localISO(new Date()).slice(0,7),supportCategory:'',supportText:'',supportName:'',supportContact:''};
 const saveSettings=()=>{try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch{}};
 let contentLoadFailed=false;
 async function loadSharedContent(withNotice=false){
- const names=['news','events','tools'];
+ const names=['news','events','tools','home'];
  const results=await Promise.allSettled(names.map(async name=>{
   const res=await fetch(`./content/${name}.json`,{cache:'no-store'});
+  if(name==='home'&&res.status===404)return data.home; // Compatible avec les installations précédentes
   if(!res.ok)throw Error(`Impossible de charger ${name} (HTTP ${res.status})`);
   const records=await res.json();
+  if(name==='home'){
+   if(!records||typeof records!=='object'||Array.isArray(records)||typeof records.banner!=='string'||typeof records.alt!=='string'||records.alt.length>240||!(records.banner===''||/^\.\/(?:assets|media)\/[A-Za-z0-9._/-]+\.(?:webp|jpg|jpeg|png)$/.test(records.banner)))throw Error('Configuration du bandeau invalide');
+   return {banner:records.banner,alt:records.alt};
+  }
   if(!Array.isArray(records)||records.length>1000||records.some(r=>!r||typeof r!=='object'||typeof r.title!=='string'||!r.title.trim()||(name!=='tools'&&typeof r.date!=='string')||(name==='tools'&&!TOOL_SECTIONS[r.section])))throw Error(`Fichier ${name} invalide`);
   return records;
  }));
@@ -155,11 +161,13 @@ function renderNewsDetail(id){
 }
 function eventCard(e){const d=e.date.split('-');return `<article class="card event"><div class="date-block"><span>${esc(weekday(e.date))}</span><b>${esc(d[2])}</b><span>${new Date(e.date+'T12:00:00').toLocaleDateString('fr-FR',{month:'short'})}</span></div><div class="event-info"><div class="flex-wrap" style="align-items:center;margin-bottom:6px"><span class="chip ${e.type==='Échéance'?'red':e.type==='Formation'?'yellow':'gray'}">${esc(e.type)}</span>${e.status?`<span class="badge-status ${e.status==='Confirmé'?'confirmed':''}">${esc(e.status)}</span>`:''}</div><h3>${esc(e.title)}</h3><p>${ico('pin',14)} ${esc(e.place||'Lieu non communiqué')}${e.time?` · ${esc(e.time.replace(':','h'))}`:''}${e.end&&e.end!==e.date?` · jusqu’au ${esc(frDate(e.end))}`:''}</p><div class="event-actions"><button class="small-link" data-action="ics" data-id="${esc(e.id)}">${ico('calendar',14)} Ajouter au calendrier</button>${e.source?ext(e.source,'Source','small-link'):''}</div></div></article>`;}
 function tileRow(title,subtitle,icon,page){return `<button class="card rowcard clickable" data-action="nav" data-page="${page}" style="width:100%;text-align:left"><span class="row-icon">${ico(icon,21)}</span><span class="card-body"><h3>${esc(title)}</h3><p>${esc(subtitle)}</p></span>${ico('chevron',18)}</button>`;}
+function homeBanner(){const value=data.home?.banner||'';if(!value)return '';const alt=data.home?.alt||'Bandeau d’information du SNUDI-FO 30';return `<section class="home-banner" aria-label="Bandeau d’information"><a href="${esc(value)}" target="_blank" rel="noopener noreferrer" aria-label="Agrandir le bandeau : ${esc(alt)}"><img src="${esc(value)}" alt="${esc(alt)}" loading="eager" decoding="async" width="1052" height="353"></a><span class="home-banner-zoom">${ico('search',14)} Agrandir l’affiche</span></section>`;}
 function renderHome(){let upcoming=eventSort(data.events).filter(e=>!isPast(e)).slice(0,3);return `<div class="stack">
-<section class="hero"><div class="hero-inner"><span class="chip">${ico('spark',15)} La force syndicale dans le Gard</span><h1>Une question ?<br/>Votre syndicat est là.</h1><p>Actualités, droits, outils et accompagnement pour les professeurs des écoles, AESH et personnels du premier degré.</p><div class="hero-actions">${btn(`${ico('help',18)} J'ai besoin d'aide`,'nav:accompagnement','btn btn-yellow')}${btn(`${ico('phone',17)} Contacter FO`,'nav:contact','btn btn-white')}</div></div></section>
+${homeBanner()}
 <section><div class="section-head"><h2>Accès rapides</h2></div><div class="grid-three">${homeTile('Actualités','Les publications du Gard','news','actualites')}${homeTile('Calendrier','Dates et échéances','calendar','calendrier',true)}${homeTile('Mes outils','Barème, courriers et fiches','tools','outils')}${homeTile('Contact','Appeler ou écrire au syndicat','mail','contact')}${homeTile("J’ai un problème",'Trouver un accompagnement','help','accompagnement')}${homeTile('Adhérer au SNUDI-FO','Pourquoi adhérer ?','users','adhesion',true)}</div></section>
 <section>${titlebar('À la une','actualites')}<div class="stack">${newsSort(data.news).slice(0,2).map(newsCard).join('')||empty('Pas encore de publication','Les actualités seront publiées prochainement.')}</div></section>
 <section>${titlebar('Les prochaines dates','calendrier')}<div class="stack">${upcoming.map(eventCard).join('')||empty('Pas de date à venir','Le calendrier est à actualiser.')}</div></section>
+<section class="hero home-help-last"><div class="hero-inner"><span class="chip">${ico('spark',15)} La force syndicale dans le Gard</span><h1>Une question ?<br/>Votre syndicat est là.</h1><p>Actualités, droits, outils et accompagnement pour les professeurs des écoles, AESH et personnels du premier degré.</p><div class="hero-actions">${btn(`${ico('help',18)} J'ai besoin d'aide`,'nav:accompagnement','btn btn-yellow')}${btn(`${ico('phone',17)} Contacter FO`,'nav:contact','btn btn-white')}</div></div></section>
 </div>`;}
 function renderNews(){let categories=['Toutes',...new Set(data.news.map(x=>x.tag))];let matches=newsSort(data.news).filter(x=>(ui.newsFilter==='Toutes'||x.tag===ui.newsFilter)&&low(x.title+' '+x.summary+' '+x.tag).includes(low(ui.newsQuery)));return `${heading('Actualités','Les publications du SNUDI-FO 30, avec leur source d’origine.')}<div class="stack"><div class="notice neutral">${ico('info',18)}<span>Les contenus sont chargés depuis les publications partagées de l’application. Leur mise à jour est assurée par l’équipe syndicale.</span></div><div class="input-wrap">${ico('search',18)}<input name="newsQuery" type="search" aria-label="Rechercher une actualité" placeholder="Rechercher une actualité…" value="${esc(ui.newsQuery)}"/></div><div class="filters">${categories.map(c=>`<button data-action="news-filter" data-value="${esc(c)}" class="filter-pill ${c===ui.newsFilter?'active':''}">${esc(c)}</button>`).join('')}</div><div class="stack">${matches.map(newsCard).join('')||empty('Aucun résultat','Essayez d’autres mots ou sélectionnez une autre catégorie.')}</div>${ext(SITE,'Toutes les actualités officielles','btn btn-outline btn-block')}</div>`;}
 const CALENDAR_FILTERS=['Tous','Formation','Échéance','Élections','RIS','Instance','Mobilisation','Autre'];
