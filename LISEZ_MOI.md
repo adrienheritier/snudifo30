@@ -1,84 +1,80 @@
-# SNUDI-FO 30 — V3 : actualités illustrées et éditeur enrichi
+# SNUDI-FO 30 — V3.1 : « Mes outils » administrables
 
-Application web (PWA) hébergée sur **GitHub Pages**, avec un espace administrateur GitHub.
+Cette mise à jour reprend la V3 (avec l’icône **blanche en relief**) et ajoute l’édition des quatre rubriques « Mes outils » par GitHub.
 
-**Si votre V2 est déjà en ligne : utilisez de préférence `SNUDI_FO_30_V3_MISE_A_JOUR.zip`, pas le ZIP d'installation complète.** Cela évite d'écraser des actualités ou événements déjà publiés.
+## Changements visibles pour les collègues
 
-## Nouveautés V3
+- Sur l’accueil, suppression **du raccourci** « Mes droits ». Les fiches pratiques restent consultables par « Mes outils » et depuis le menu.
+- Dans « Mes outils », **quatre entrées uniquement** : Barème mouvement, Modèles de courriers, Fiches pratiques, Documents utiles.
+- Sous ces quatre entrées, bouton **« Contacter le SNUDI FO »**, qui ouvre la page de contact.
+- Dans chaque rubrique, publication(s) modifiables avec titre, résumé, texte enrichi, images de couverture et photos intégrées.
+- Dans les modèles de courriers, bouton **« Copier le courrier »**. Le texte copié correspond au contenu actuel (et non à un ancien brouillon).
+- Les fiches pratiques conservent la recherche, les filtres par sous-catégorie et les favoris.
 
-- Image de couverture facultative (liste des actualités + en haut de l'article).
-- Mise en forme des articles : titres, sous-titres, gras, italique, souligné, listes à puces ou numérotées, citation et liens HTTPS.
-- Plusieurs images placées dans le texte, dans l'ordre souhaité.
-- Compression et redimensionnement automatiques des images avant leur envoi : largeur/hauteur maximale 1 600 px, fichier final de moins de 1,5 Mo ; source initiale de 15 Mo maximum.
-- Images acceptées : **JPG, PNG, WebP**. Les GIF et SVG ne sont pas acceptés.
-- Bouton « Prévisualiser l'article » pour inspecter le texte, la couverture et les photos avant publication.
-- Changement de couverture ; clic sur une image dans l'éditeur pour la **remplacer** ou la **supprimer**.
-- Envoi des images dans le dossier `media/actualites/` du même dépôt GitHub. Le répertoire est créé automatiquement si nécessaire.
-- Après publication réussie, suppression des anciens fichiers médias **si aucun autre article ne les utilise**.
-- Conservation des actualités anciennes et du calendrier sans changement de format imposé aux données déjà en ligne.
+## Changements dans l’administration
 
-## Mise à jour V2 → V3 SANS perte des articles publiés
+Trois onglets : **Actualités**, **Calendrier** et **Mes outils**. Dans l’onglet Mes outils :
+1. Choisir la rubrique à filtrer (barème, modèles, fiches, documents).
+2. Cliquer sur **Modifier** pour une publication existante, ou **+ Nouveau** pour en créer une.
+3. Renseigner la rubrique, le titre, le résumé et éventuellement une sous-catégorie et une URL HTTPS.
+4. Rédiger dans l’éditeur enrichi, insérer des images, choisir facultativement une couverture.
+5. Cliquer sur « Prévisualiser la fiche », puis « Publier sur GitHub ».
+6. Pour supprimer un contenu, utiliser « Supprimer » (confirmation demandée).
 
-1. Depuis l'administration V2, utilisez « Exporter une sauvegarde » pour conserver un JSON local. Il est également conseillé de télécharger une copie de votre dépôt GitHub.
-2. Décompressez **`SNUDI_FO_30_V3_MISE_A_JOUR.zip`**.
-3. Depuis GitHub, ouvrez votre dépôt `adrienheritier/snudifo30` (ou celui où la V2 est installée).
-4. Utilisez `Add file → Upload files` dans le dossier **racine** du dépôt, puis importez le contenu décompressé (sans le dossier parent). Vous devez **ajouter** le fichier `article-content.js` et **remplacer** :
-   - `admin.html` ;
-   - `admin.js` ;
-   - `admin.css` ;
-   - `index.html` ;
-   - `app.js` ;
-   - `styles.css` ;
-   - `sw.js`.
-5. Enregistrez les changements sur la branche **`main`**, utilisée par GitHub Pages. Si votre installation emploie une autre branche de publication, utilisez-la à la place.
-6. **Ne remplacez PAS `content/news.json` ou `content/events.json`** : ce sont vos données déjà publiées. Ne supprimez pas non plus vos fichiers dans `assets` ni les anciennes images dans `media`.
-7. Une fois le déploiement GitHub Pages achevé, actualisez l'application et `admin.html`. Si l'ancienne interface s'affiche encore sur téléphone, fermez/réouvrez la PWA ou videz le cache du navigateur ; le service worker utilise maintenant le cache `snudifo30-v3.0`.
+Le transfert des images utilise la compression de la V3 ; les nouveaux médias sont stockés sous `media/outils/`. La suppression d’une ancienne image est effectuée après publication réussie, si aucun autre contenu de la même liste ne la référence. Les anciens fichiers peuvent subsister dans l’historique Git.
 
-L'ancien jeton GitHub Fine-grained avec `Contents: Read and write` sur ce dépôt est suffisant. **Ne l'ajoutez jamais aux fichiers du dépôt.**
+## IMPORTANT : installer la mise à jour **sans effacer les contenus existants**
 
-## Créer un article illustré
+L’archive `SNUDI_FO_30_V3_1_MISE_A_JOUR.zip` est le choix adapté au dépôt `adrienheritier/snudifo30` déjà en ligne.
 
-1. Ouvrez `https://adrienheritier.github.io/snudifo30/admin.html` si c'est bien l'adresse GitHub Pages de votre dépôt, et connectez-vous comme en V2.
-2. Dans **Actualités**, cliquez sur « + Nouveau ».
-3. Renseignez titre, date, catégorie, résumé et éventuellement lien source.
-4. Dans **Image de couverture**, cliquez « Choisir une image » (facultatif).
-5. Rédigez le texte dans l'éditeur enrichi et utilisez les boutons pour mettre en forme vos paragraphes.
-6. Placez le curseur où vous souhaitez insérer une photographie et cliquez « + Image dans le texte ». Répétez autant de fois que nécessaire.
-7. Cliquez sur une image du texte pour afficher « Remplacer » et « Supprimer ».
-8. Cliquez sur **Prévisualiser l’article**. Vérifiez notamment l'ordre des illustrations, leurs descriptions alternatives et les liens.
-9. Cliquez **Publier sur GitHub**, puis confirmez. **Ne fermez pas la page pendant les transferts.** Chaque image est enregistrée sur GitHub, suivie d'un commit qui met à jour `content/news.json`. Les anciennes images inutilisées sont ensuite supprimées.
-10. Attendez le déploiement GitHub Pages et rechargez l'application pour voir l'actualité.
+**Avant toute mise à jour** : dans l’administration en ligne, cliquer sur « Exporter une sauvegarde » ; sauvegarder aussi une copie du dépôt si possible.
 
-**Attention aux images personnelles :** ne publiez des photographies de collègues, d'enfants ou d'autres personnes identifiables que lorsque vous disposez des autorisations nécessaires. Les images sont accessibles publiquement et leurs anciennes versions peuvent demeurer dans l'historique Git de GitHub. La compression du navigateur supprime en général les métadonnées EXIF mais ce mécanisme ne remplace pas les règles de confidentialité et de droit à l'image.
+**À la racine de la branche `main`**, remplacer les fichiers suivants depuis le ZIP :
 
-## Modifier une actualité publiée
+- `index.html`, `admin.html`;
+- `app.js`, `admin.js`, `article-content.js`;
+- `styles.css`, `admin.css`, `sw.js`;
+- `manifest.webmanifest` (pour conserver l’icône blanche en relief).
 
-1. Depuis « Actualités », cliquez **Modifier**.
-2. La couverture et les images existantes apparaissent dans le formulaire.
-3. Pour changer la couverture : choisissez une nouvelle image ; pour la retirer, cliquez « Retirer l'image ».
-4. Pour changer une image intégrée : cliquez dessus, puis « Remplacer ». Pour la retirer : « Supprimer ».
-5. Prévisualisez puis publiez. Les références et les fichiers inutilisés seront traités **après** l'enregistrement de l'article.
+**Dans le dossier `content`** : ajouter **`tools.json`** ; c’est un **nouveau fichier**. Il contient les contenus initiaux des quatre rubriques (25 entrées). **Ne PAS remplacer `content/news.json` ou `content/events.json`** : ils contiennent tes publications déjà en ligne.
 
-Les anciennes actualités V2 contenant le champ `body` sont ouvertes dans l'éditeur enrichi et migrées vers `bodyHtml` lorsque vous les republiez. Les anciennes actualités avec seulement un lien externe continuent à fonctionner.
+**Dans le dossier `assets`** : déposer les cinq icônes PNG de la V3.0.2 si elles n’y sont pas encore. Les images d’origine de l’en-tête restent inchangées (`logo-snudi-original.jpg`).
 
-## Calendrier
+**Dans le dossier `media/outils`** : aucun fichier particulier nécessaire pour publier des images, l’API GitHub crée automatiquement le chemin lors du premier envoi. Le fichier `.gitkeep` est fourni à titre indicatif.
 
-Aucun changement de fonctionnement : utilisez l'onglet « Calendrier » pour ajouter, modifier et supprimer des événements, classés dans les catégories déjà filtrables dans l'application publique.
+### Conseil pour GitHub dans le navigateur
 
-## Limites actuelles
+Quand tu utilises **Add file → Upload files**, GitHub peut ne pas prendre en compte une arborescence déposée depuis le gestionnaire de fichiers. Pour ne pas déplacer les dossiers par erreur, effectue **deux opérations distinctes** :
+1. Importer les fichiers de la racine directement à la racine du dépôt.
+2. Ouvrir le dossier `content` dans GitHub, puis y importer **uniquement** `tools.json`.
+3. Ouvrir le dossier `assets`, puis y importer les PNG si nécessaire.
 
-- Pas de brouillons ni de programmation automatique de publication dans cette version.
-- Pas d'ajout de pièces jointes PDF par l'éditeur.
-- Le système de mise en forme utilise les commandes natives des navigateurs (éditeur `contenteditable`). Il est fonctionnel sur les navigateurs courants, mais reste moins sophistiqué qu'un éditeur professionnel dédié.
-- Un envoi d'images peut générer plusieurs commits GitHub. **Si la dernière étape de publication échoue**, des images peuvent déjà avoir été envoyées ; le formulaire conserve normalement les références pour réessayer sans les réenvoyer. En cas d'abandon après une erreur, il peut rester des fichiers médias orphelins à nettoyer dans le dépôt.
-- L'espace `admin.html` n'est pas protégé par une connexion indépendante ; l'**autorisation d'écriture** repose sur le jeton GitHub, conservé temporairement en mémoire de l'onglet. Ne communiquez jamais ce jeton.
-- Un fichier supprimé d'un dépôt Git n'est pas nécessairement effacé de son **historique Git**.
-- Les actualités et le calendrier sont publics, comme tous les fichiers déployés sur GitHub Pages.
-- La publication peut prendre un peu de temps pour apparaître à cause du déploiement et du cache de la PWA.
+**Ne dépose pas** le fichier ZIP lui-même sur GitHub : il faut le décompresser d’abord. Un dépôt mis à jour via Git peut aussi conserver l’arborescence automatiquement.
 
-## Références techniques
+### Après installation
 
-- API utilisée pour enregistrer fichiers et contenus : <https://docs.github.com/en/rest/repos/contents>
-- GitHub Pages : <https://docs.github.com/en/pages>
-- Application écrite en HTML, CSS et JavaScript, sans service externe ni base de données supplémentaire.
+Attendre la fin du déploiement GitHub Pages puis effectuer un rafraîchissement forcé (`Ctrl+Maj+R`). Si la PWA reste bloquée sur une ancienne version, fermer/réouvrir l’application et, si nécessaire, la réinstaller. Le service worker utilise maintenant le cache `snudifo30-v3.1-outils-editables`.
 
+Adresse habituelle de l’administration :
+`https://adrienheritier.github.io/snudifo30/admin.html`
+
+Le **jeton GitHub existant** avec la permission `Contents: Read and write` suffit. Il n’est jamais écrit dans les fichiers du site.
+
+## Fichiers de données et sauvegardes
+
+- `content/news.json` : actualités, ne pas écraser.
+- `content/events.json` : calendrier, ne pas écraser.
+- `content/tools.json` : données nouvelles et éditables des quatre rubriques.
+
+**Le modèle de sauvegarde inclut désormais aussi les outils.** Les 25 entrées initiales ont été reprises des contenus de la V3 (liens, modèles et fiches) sans nouvelle vérification juridique ; il faut contrôler toute fiche avant d’en faire un support juridique officiel et actualisé.
+
+La mise à jour ne crée pas d’authentification autonome : les opérations d’écriture exigent toujours un jeton GitHub valide. Des conflits de version sont détectés avant publication pour éviter l’écrasement d’une modification concurrente. L’application et les médias publiés sont publics.
+
+## Limites
+
+- Aucun brouillon ni programmation automatique des publications.
+- Pas d’hébergement de PDF via ce formulaire (un lien HTTPS peut être ajouté).
+- Les quatre **rubriques sont fixes** dans cette version ; tu peux en revanche ajouter, modifier, réorganiser par rubrique et supprimer leurs contenus éditoriaux.
+- Les actualités et le calendrier continuent à fonctionner comme en V3.
+- Si le champ du lien est laissé vide, la publication reste autorisée.
+- La création et la suppression de fichiers sur le dépôt réel doivent encore être vérifiées une première fois après l’installation (les tests ont simulé l’API GitHub).

@@ -54,3 +54,7 @@
 .preview-body{padding:19px 24px 32px}.preview-summary{font-weight:650}.preview-body h2{font-size:1.6rem;margin-bottom:10px}
 #workingIndicator{margin:12px 0}
 @media(max-width:600px){.preview-body{padding:15px}.rich-editor{min-height:230px}.rich-tool{padding:6px 8px}}
+
+/* V3.1 : filtre d’administration des quatre rubriques */
+.tool-filter{display:grid;gap:5px;margin:12px 0 4px;font-size:.79rem;font-weight:750}
+.tool-filter select{min-height:41px}

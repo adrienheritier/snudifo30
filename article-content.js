@@ -3,7 +3,7 @@
   'use strict';
   const TAGS = new Set(['P','DIV','BR','H2','H3','H4','B','STRONG','I','EM','U','UL','OL','LI','BLOCKQUOTE','FIGURE','FIGCAPTION','IMG','A']);
   const DISCARD = new Set(['SCRIPT','STYLE','IFRAME','OBJECT','EMBED','SVG','MATH','FORM','INPUT','BUTTON','VIDEO','AUDIO','TEMPLATE','META','LINK']);
-  const MEDIA = /^\.?\/?media\/actualites\/[a-zA-Z0-9_-]+\.(?:webp|jpe?g|png)$/;
+  const MEDIA = /^\.?\/?media\/(?:actualites|outils)\/[a-zA-Z0-9_-]+\.(?:webp|jpe?g|png)$/;
   function validMediaPath(value) {
     if (typeof value !== 'string' || value.length > 260 || value.includes('..') || /[%?#\\]/.test(value)) return false;
     return MEDIA.test(value);

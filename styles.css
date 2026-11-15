@@ -38,3 +38,9 @@
 .article-content a{color:var(--red);font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .legacy-body{white-space:pre-wrap}
 @media(max-width:480px){.news-card.with-cover{grid-template-columns:92px minmax(0,1fr)}.news-picture{width:92px;height:88px}.news-card{padding:13px;gap:10px}}
+
+/* V3.1 — ressources éditoriales « Mes outils » */
+.tool-item-card{align-items:center;gap:12px;min-height:86px}
+.tool-item-thumb{width:76px;height:76px;border-radius:11px;object-fit:cover;flex:none;background:#f7f7f9}
+.tool-detail .article-content{margin-top:18px}
+@media (max-width:400px){.tool-item-thumb{width:62px;height:68px}}
