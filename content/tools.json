@@ -183,9 +183,11 @@
     "id": "d3",
     "section": "documents",
     "title": "Calendrier des formations 2026-2027",
-    "summary": "Ressource de référence à consulter.",
-    "bodyHtml": "<p>Ouvrez la ressource pour consulter la version publiée par son éditeur.</p>",
-    "url": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie"
+    "summary": "Première partie des formations 2026/2027",
+    "bodyHtml": "<p>D'autres formations seront programmées en période 4.&nbsp;</p><p>Le planning sera confirmé prochainement.</p>",
+    "url": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie",
+    "tag": "",
+    "cover": "./media/outils/mwi1ozmo-5tosnyr18u-couverture.webp"
   },
   {
     "id": "d4",
