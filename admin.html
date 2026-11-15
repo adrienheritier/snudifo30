@@ -10,12 +10,13 @@
   <link rel="icon" href="./assets/icon-192.png" type="image/png">
   <link rel="stylesheet" href="./styles.css">
   <link rel="stylesheet" href="./admin.css">
+  <script defer src="./article-content.js"></script>
   <script defer src="./admin.js"></script>
   <title>Administration — SNUDI-FO 30</title>
 </head>
 <body class="admin-body">
 <header class="admin-head">
-  <div class="admin-head-inner"><img src="./assets/logo-snudi-original.jpg" alt="Logo officiel SNUDI FO 30" class="admin-logo"><div><b>Administration SNUDI-FO 30</b><span>Actualités & calendrier</span></div><a href="./index.html" class="admin-head-link">Voir l’application</a></div>
+  <div class="admin-head-inner"><img src="./assets/logo-snudi-original.jpg" alt="Logo officiel SNUDI FO 30" class="admin-logo"><div><b>Administration SNUDI-FO 30</b><span>Articles illustrés & calendrier</span></div><a href="./index.html" class="admin-head-link">Voir l’application</a></div>
 </header>
 <main class="admin-container">
   <section id="connection" class="card admin-connection">
@@ -37,7 +38,8 @@
       <div><span class="eyebrow">Dépôt connecté</span><h1 id="repositoryTitle">Administration</h1><p id="repositorySubtitle" class="muted"></p></div>
       <div class="flex-wrap"><button id="reloadButton" class="btn btn-outline" type="button">Actualiser les contenus</button><button id="backupButton" class="btn btn-neutral" type="button">Exporter une sauvegarde</button><button id="disconnectButton" class="btn btn-neutral" type="button">Déconnexion</button></div>
     </div>
-    <div class="notice neutral" style="margin:16px 0">Chaque publication crée un commit GitHub. Les collègues voient le nouveau contenu après le déploiement de GitHub Pages et une actualisation de l’application. Il n’y a pas de publication immédiate sur un serveur distinct.</div>
+    <div class="notice neutral" style="margin:16px 0"><b>V3 : publie des articles avec photos de couverture et images dans le texte.</b> Chaque publication crée un commit GitHub. Les collègues voient le nouveau contenu après le déploiement de GitHub Pages et une actualisation de l’application. Il n’y a pas de publication immédiate sur un serveur distinct.</div>
+    <div id="workingIndicator" class="notice neutral" hidden aria-live="polite">Publication en cours : ne ferme pas cette page pendant le transfert des images et des textes.</div>
     <div class="admin-tabs" role="tablist" aria-label="Rubrique à administrer">
       <button type="button" id="tabNews" data-tab="news" role="tab" aria-selected="true" class="active">Actualités</button>
       <button type="button" id="tabEvents" data-tab="events" role="tab" aria-selected="false">Calendrier</button>
@@ -53,6 +55,10 @@
       </section>
     </div>
   </section>
+  <dialog id="previewDialog" class="preview-dialog" aria-label="Aperçu de la publication">
+    <div class="preview-header"><b>Aperçu de l’article sur l’application</b><button id="closePreview" type="button" class="btn btn-neutral btn-sm">Fermer</button></div>
+    <div class="preview-body"><p id="previewMeta" class="muted"></p><h2 id="previewTitle"></h2><p id="previewSummary" class="preview-summary"></p><img id="previewCover" class="article-cover" alt="Couverture" hidden><div id="previewBody" class="article-content"></div></div>
+  </dialog>
   <p id="adminMessage" role="status" aria-live="polite" class="admin-message" hidden></p>
   <footer class="footer-note">Espace d’édition du site public SNUDI-FO 30. Ne pas publier d’informations personnelles concernant les collègues ou des élèves.</footer>
 </main>

@@ -1,15 +1,16 @@
-/* SNUDI-FO 30 — éditeur GitHub Pages. Aucun jeton n'est stocké. */
+/* SNUDI-FO 30 V3 — édition GitHub des actualités enrichies et du calendrier.
+ * Aucun jeton n'est stocké dans le navigateur. Les médias sont transférés dans le dépôt GitHub.
+ */
 'use strict';
-const $=selector=>document.querySelector(selector);
-const state={token:'',owner:'',repo:'',branch:'main',tab:'news',records:{news:[],events:[]},sha:{news:'',events:''},editingId:null,busy:false};
-const PATHS={news:'content/news.json',events:'content/events.json'};
-const FIELDS={
+const $ = selector => document.querySelector(selector);
+const state = {token:'',owner:'',repo:'',branch:'main',tab:'news',records:{news:[],events:[]},sha:{news:'',events:''},editingId:null,busy:false,dirty:false,coverDraft:null,coverRemoved:false,pendingMedia:new Map(),editorRange:null,selectedImage:null};
+const PATHS = {news:'content/news.json',events:'content/events.json'};
+const FIELDS = {
  news:[
   {key:'date',label:'Date de publication',type:'date',required:true},
   {key:'tag',label:'Catégorie',type:'select',options:['Carte scolaire','AESH','Carrière','Formations','Mobilisations','Réglementation','Actualité'],required:true},
   {key:'title',label:'Titre',type:'text',required:true,placeholder:'Titre de l’actualité'},
   {key:'summary',label:'Résumé visible dans la liste',type:'textarea',required:true,placeholder:'Quelques lignes pour présenter l’actualité'},
-  {key:'body',label:'Contenu de l’article (facultatif)',type:'textarea',placeholder:'Écrire le texte complet. Les retours à la ligne sont conservés.',className:'body-text'},
   {key:'url',label:'Lien source (facultatif)',type:'url',placeholder:'https://…'}
  ],
  events:[
@@ -24,82 +25,133 @@ const FIELDS={
  ]
 };
 const today=()=>{const d=new Date();return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;};
-function message(txt,kind=''){const el=$('#adminMessage');el.textContent=txt;el.className='admin-message '+kind;el.hidden=false;clearTimeout(message.timer);message.timer=setTimeout(()=>el.hidden=true,8500);}
-function setBusy(value){state.busy=value;document.querySelectorAll('#workspace button, #connectButton').forEach(b=>b.disabled=value);}
+const sleep=ms=>new Promise(ok=>setTimeout(ok,ms));
+const escapeHtml=str=>String(str??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+function message(txt,kind='') { const el=$('#adminMessage');el.textContent=txt;el.className='admin-message '+kind;el.hidden=false;clearTimeout(message.timer);message.timer=setTimeout(()=>el.hidden=true,11000); }
+function setBusy(value){state.busy=value;document.querySelectorAll('#workspace button, #connectButton').forEach(b=>b.disabled=value);$('#workingIndicator').hidden=!value;}
 function autoSuggestRepo(){const m=location.hostname.match(/^([^.]+)\.github\.io$/i);if(!m)return;$('#owner').value=m[1];$('#repo').value=location.pathname.split('/').filter(Boolean)[0]||m[1]+'.github.io';}
 function repoInfo(){return `${state.owner}/${state.repo} · ${state.branch}`;}
 function validatePath(val,label){if(!/^[A-Za-z0-9._-]+$/.test(val)||val==='.'||val==='..')throw Error(`${label} invalide.`);}
 function githubUrl(path){return `https://api.github.com/repos/${encodeURIComponent(state.owner)}/${encodeURIComponent(state.repo)}/contents/${path}`;}
 function headers(){return {'Accept':'application/vnd.github+json','Authorization':`Bearer ${state.token}`,'X-GitHub-Api-Version':'2026-03-10'};}
 function decode64(txt){const binary=atob(txt.replace(/\s+/g,''));return new TextDecoder().decode(Uint8Array.from(binary,c=>c.charCodeAt(0)));}
-function encode64(txt){const bytes=new TextEncoder().encode(txt);let binary='';for(let i=0;i<bytes.length;i+=0x4000){binary+=String.fromCharCode(...bytes.subarray(i,i+0x4000));}return btoa(binary);}
-async function readRemote(type){const url=githubUrl(PATHS[type])+'?ref='+encodeURIComponent(state.branch);const response=await fetch(url,{headers:headers(),cache:'no-store'});const result=await response.json().catch(()=>({}));
- if(!response.ok)throw Error(`Lecture de ${PATHS[type]} impossible (HTTP ${response.status}) : ${result.message||'vérifiez les droits et les fichiers sur GitHub'}`);
+function encode64(txt){const bytes=new TextEncoder().encode(txt);let binary='';for(let i=0;i<bytes.length;i+=0x4000)binary+=String.fromCharCode(...bytes.subarray(i,i+0x4000));return btoa(binary);}
+function base64Blob(blob){return new Promise((resolve,reject)=>{const r=new FileReader();r.onerror=()=>reject(Error('Lecture de l’image impossible.'));r.onload=()=>resolve(String(r.result).split(',')[1]);r.readAsDataURL(blob);});}
+async function api(path,method='GET',body=null){const response=await fetch(githubUrl(path)+(method==='GET'?'?ref='+encodeURIComponent(state.branch):''),{method,headers:{...headers(),...(body?{'Content-Type':'application/json'}:{})},cache:'no-store',body:body?JSON.stringify(body):undefined});const result=await response.json().catch(()=>({}));return {response,result};}
+async function readRemote(type){const {response,result}=await api(PATHS[type]);if(!response.ok)throw Error(`Lecture de ${PATHS[type]} impossible (HTTP ${response.status}) : ${result.message||'vérifie les droits et les fichiers sur GitHub'}`);
  if(!result.sha||typeof result.content!=='string')throw Error(`Contenu de ${PATHS[type]} non pris en charge.`);
  let records;try{records=JSON.parse(decode64(result.content));}catch{throw Error(`${PATHS[type]} n'est pas un JSON valide.`);}
  if(!Array.isArray(records)||records.length>1000)throw Error(`Format de ${PATHS[type]} invalide.`);
- return {records,sha:result.sha};
-}
-async function reloadAll(){setBusy(true);try{const [n,e]=await Promise.all([readRemote('news'),readRemote('events')]);state.records.news=n.records;state.records.events=e.records;state.sha.news=n.sha;state.sha.events=e.sha;render();message('Contenus chargés depuis GitHub.','ok');}catch(error){message(error.message,'error');throw error;}finally{setBusy(false);}}
+ return {records,sha:result.sha};}
+async function reloadAll(){setBusy(true);try{const [n,e]=await Promise.all([readRemote('news'),readRemote('events')]);state.records.news=n.records;state.records.events=e.records;state.sha.news=n.sha;state.sha.events=e.sha;resetDraft();render();message('Contenus chargés depuis GitHub.','ok');}catch(error){message(error.message,'error');throw error;}finally{setBusy(false);}}
 async function connect(event){event.preventDefault();if(state.busy)return;const f=new FormData(event.currentTarget);
- try{
-  state.owner=String(f.get('owner')||'').trim();state.repo=String(f.get('repo')||'').trim();state.branch=String(f.get('branch')||'main').trim();state.token=String(f.get('token')||'').trim();
-  validatePath(state.owner,'Propriétaire');validatePath(state.repo,'Dépôt');if(!state.branch||state.branch.includes('..'))throw Error('Branche invalide.');if(!state.token)throw Error('Jeton GitHub manquant.');
-  await reloadAll();
-  $('#token').value='';$('#repositoryTitle').textContent=repoInfo();$('#repositorySubtitle').textContent='Éditions enregistrées par commit GitHub, avec suivi des modifications.';
-  $('#connection').hidden=true;$('#workspace').hidden=false;
- }catch(error){state.token='';$('#token').value='';message(error.message,'error');}
-}
+ try{state.owner=String(f.get('owner')||'').trim();state.repo=String(f.get('repo')||'').trim();state.branch=String(f.get('branch')||'main').trim();state.token=String(f.get('token')||'').trim();validatePath(state.owner,'Propriétaire');validatePath(state.repo,'Dépôt');if(!state.branch||state.branch.includes('..'))throw Error('Branche invalide.');if(!state.token)throw Error('Jeton GitHub manquant.');await reloadAll();$('#token').value='';$('#repositoryTitle').textContent=repoInfo();$('#repositorySubtitle').textContent='Articles enrichis, images et calendrier publiés sur GitHub.';$('#connection').hidden=true;$('#workspace').hidden=false;}catch(error){state.token='';$('#token').value='';message(error.message,'error');}}
 function mk(tag,cls='',txt=''){const el=document.createElement(tag);if(cls)el.className=cls;if(txt)el.textContent=txt;return el;}
-function field(f,value){const wrap=mk('div','form-control');const label=mk('label','',f.label+(f.required?' *':''));label.htmlFor='field_'+f.key;wrap.append(label);
- let input;if(f.type==='textarea'){input=mk('textarea',f.className||'');input.rows=f.key==='body'?9:4;input.placeholder=f.placeholder||'';input.value=value||'';}
+function field(f,value){const wrap=mk('div','form-control');const label=mk('label','',f.label+(f.required?' *':''));label.htmlFor='field_'+f.key;wrap.append(label);let input;
+ if(f.type==='textarea'){input=mk('textarea');input.rows=4;input.placeholder=f.placeholder||'';input.value=value||'';}
  else if(f.type==='select'){input=mk('select','input');const vals=[...(f.options||[])];if(value&&!vals.includes(value))vals.push(value);vals.forEach(v=>{const o=mk('option','',v);o.value=v;input.append(o);});input.value=value||vals[0]||'';}
  else {input=mk('input','input');input.type=f.type;input.placeholder=f.placeholder||'';input.value=value||'';}
- input.id='field_'+f.key;input.name=f.key;input.required=Boolean(f.required);wrap.append(input);return wrap;
-}
+ input.id='field_'+f.key;input.name=f.key;input.required=Boolean(f.required);wrap.append(input);return wrap;}
+function usedPaths(record){const results=new Set();if(!record||typeof record!=='object')return results;const cover=SnudiArticle.asPath(record.cover||'');if(cover)results.add(cover);SnudiArticle.imagePaths(record.bodyHtml||'').forEach(p=>results.add(p));return results;}
+function resetDraft(){for(const url of state.pendingMedia.keys())URL.revokeObjectURL(url);state.pendingMedia.clear();if(state.coverDraft){URL.revokeObjectURL(state.coverDraft.url);state.coverDraft=null;}state.coverRemoved=false;state.editorRange=null;state.selectedImage=null;state.dirty=false;state.editingId=null;}
+function confirmDiscard(){return !state.dirty||confirm('Les modifications de ce formulaire ne sont pas publiées. Les abandonner ?');}
 function renderList(){const list=$('#recordList');list.replaceChildren();const records=[...state.records[state.tab]].sort((a,b)=>state.tab==='news'?(b.date||'').localeCompare(a.date||''):(a.date||'').localeCompare(b.date||''));$('#listTitle').textContent=(state.tab==='news'?'Actualités':'Événements')+` (${records.length})`;
  if(!records.length){list.append(mk('p','muted','Aucune entrée. Ajoute une première publication.'));return;}
- records.forEach(r=>{const card=mk('article','admin-record'+(state.editingId===r.id?' selected':''));const main=mk('div','admin-record-main');main.append(mk('b','',r.title||'Sans titre'),mk('span','',`${r.date||'Sans date'} • ${r.tag||r.type||'Autre'}`));const actions=mk('div','admin-record-actions');const edit=mk('button','','Modifier');edit.type='button';edit.dataset.action='edit';edit.dataset.id=r.id;const del=mk('button','delete','Supprimer');del.type='button';del.dataset.action='delete';del.dataset.id=r.id;actions.append(edit,del);card.append(main,actions);list.append(card);});
-}
-function renderForm(){const form=$('#recordForm');form.replaceChildren();let rec=state.records[state.tab].find(r=>r.id===state.editingId)||{};$('#editorTitle').textContent=(state.editingId?'Modifier ':'Nouvelle ')+(state.tab==='news'?'actualité':'entrée du calendrier');$('#editingBadge').hidden=!state.editingId;
- for(const f of FIELDS[state.tab]){form.append(field(f,rec[f.key]||(!state.editingId&&f.key==='date'?today():'')));}
- const actions=mk('div','form-actions');const save=mk('button','btn btn-primary',state.editingId?'Publier les modifications':'Publier sur GitHub');save.type='submit';const reset=mk('button','btn btn-neutral','Annuler');reset.type='button';reset.id='cancelEdit';actions.append(save,reset);form.append(actions);
- const help=mk('p','field-hint',state.tab==='news'?'Une actualité peut comporter un contenu complet dans l’application, un lien source, ou les deux.':'Utilise les catégories proposées : elles correspondent aux filtres de l’agenda public.');form.append(help);
-}
+ records.forEach(r=>{const card=mk('article','admin-record'+(state.editingId===r.id?' selected':''));const main=mk('div','admin-record-main');main.append(mk('b','',r.title||'Sans titre'),mk('span','',`${r.date||'Sans date'} • ${r.tag||r.type||'Autre'}`));if(r.cover)main.append(mk('span','','🖼️ Image de couverture'));const actions=mk('div','admin-record-actions');const edit=mk('button','','Modifier');edit.type='button';edit.dataset.action='edit';edit.dataset.id=r.id;const del=mk('button','delete','Supprimer');del.type='button';del.dataset.action='delete';del.dataset.id=r.id;actions.append(edit,del);card.append(main,actions);list.append(card);});}
+function markupFromLegacy(body){return String(body||'').split(/\n\s*\n/).filter(s=>s.trim()).map(s=>'<p>'+escapeHtml(s).replace(/\n/g,'<br>')+'</p>').join('');}
+function coverArea(rec){const wrap=mk('section','media-control');const label=mk('div','media-control-title','Image de couverture (facultative)');wrap.append(label);wrap.append(mk('p','field-hint','Visible sur les cartes d’actualité et en haut de l’article. JPEG, PNG ou WebP, optimisé avant envoi.'));
+ const img=mk('img','admin-cover-preview');img.id='coverPreview';img.alt='Aperçu de la couverture';img.hidden=true;wrap.append(img);
+ const controls=mk('div','flex-wrap');const choose=mk('label','btn btn-outline btn-sm upload-label','Choisir une image');choose.htmlFor='coverFile';const input=mk('input');input.type='file';input.id='coverFile';input.accept='image/jpeg,image/png,image/webp';input.hidden=true;choose.append(input);const remove=mk('button','btn btn-neutral btn-sm','Retirer l’image');remove.type='button';remove.id='removeCover';controls.append(choose,remove);wrap.append(controls);const info=mk('div','field-hint');info.id='coverStatus';wrap.append(info);return wrap;}
+function richEditorArea(rec){const wrap=mk('section','rich-section');const label=mk('div','media-control-title','Contenu de l’article');wrap.append(label);wrap.append(mk('p','field-hint','Mise en forme et images intégrées. Les anciennes actualités restent modifiables.'));
+ const bar=mk('div','rich-toolbar');bar.setAttribute('role','toolbar');bar.setAttribute('aria-label','Mise en forme de l’article');const controls=[['bold','Gras','G'],['italic','Italique','I'],['underline','Souligné','S'],['h2','Titre H2','H2'],['h3','Sous-titre H3','H3'],['ul','Liste à puces','• Liste'],['ol','Liste numérotée','1. Liste'],['quote','Citation','❝'],['link','Créer un lien','Lien'],['unlink','Enlever le lien','Sans lien']];
+ controls.forEach(([cmd,title,label])=>{const b=mk('button','rich-tool',label);b.type='button';b.title=title;b.setAttribute('aria-label',title);b.dataset.cmd=cmd;bar.append(b);});
+ const imageButton=mk('button','rich-tool rich-tool-image','＋ Image dans le texte');imageButton.type='button';imageButton.id='insertInlineImage';bar.append(imageButton);wrap.append(bar);
+ const editor=mk('div','rich-editor article-content');editor.id='richEditor';editor.contentEditable='true';editor.setAttribute('role','textbox');editor.setAttribute('aria-multiline','true');editor.setAttribute('aria-label','Contenu enrichi de l’article');editor.dataset.placeholder='Rédige ton article et ajoute des images à l’endroit souhaité…';editor.innerHTML=SnudiArticle.sanitize(rec.bodyHtml||markupFromLegacy(rec.body||''));wrap.append(editor);
+ const imageInput=mk('input');imageInput.type='file';imageInput.accept='image/jpeg,image/png,image/webp';imageInput.id='inlineImageInput';imageInput.hidden=true;wrap.append(imageInput);
+ const replaceInput=mk('input');replaceInput.type='file';replaceInput.accept=imageInput.accept;replaceInput.id='replaceInlineInput';replaceInput.hidden=true;wrap.append(replaceInput);
+ const imageTools=mk('div','selected-image-tools');imageTools.id='selectedImageTools';imageTools.hidden=true;imageTools.append(mk('span','field-hint','Image sélectionnée :'));
+ const replace=mk('button','btn btn-outline btn-sm','Remplacer');replace.type='button';replace.id='replaceInline';const del=mk('button','btn btn-neutral btn-sm','Supprimer');del.type='button';del.id='deleteInline';imageTools.append(replace,del);wrap.append(imageTools);wrap.append(mk('p','field-hint','Astuce : clique sur une image dans l’article pour la remplacer ou la supprimer. Les images sont compressées automatiquement avant publication.'));
+ return wrap;}
+function renderForm(){const form=$('#recordForm');form.replaceChildren();const rec=state.records[state.tab].find(r=>r.id===state.editingId)||{};$('#editorTitle').textContent=(state.editingId?'Modifier ':'Nouvelle ')+(state.tab==='news'?'actualité':'entrée du calendrier');$('#editingBadge').hidden=!state.editingId;
+ for(const f of FIELDS[state.tab]){if(state.tab==='news'&&f.key==='url'){form.append(coverArea(rec),richEditorArea(rec));}const initial=rec[f.key]||(!state.editingId&&f.key==='date'?today():(!state.editingId&&f.key==='tag'?'Actualité':''));form.append(field(f,initial));}
+ const actions=mk('div','form-actions');if(state.tab==='news'){const preview=mk('button','btn btn-outline','Prévisualiser l’article');preview.type='button';preview.id='previewArticle';actions.append(preview);}const save=mk('button','btn btn-primary',state.editingId?'Publier les modifications':'Publier sur GitHub');save.type='submit';const reset=mk('button','btn btn-neutral','Annuler');reset.type='button';reset.id='cancelEdit';actions.append(save,reset);form.append(actions);
+ const help=mk('p','field-hint',state.tab==='news'?'Les photos sont enregistrées dans le dépôt avec le jeton GitHub actuel. Une publication peut nécessiter plusieurs commits (images puis article).':'Les catégories correspondent aux filtres de l’agenda public.');form.append(help);
+ if(state.tab==='news'){refreshCover(rec);updateSelectedImage(null);}}
+function refreshCover(rec={}){const img=$('#coverPreview');if(!img)return;const src=state.coverDraft?.url||(!state.coverRemoved?SnudiArticle.asPath(rec.cover||''):'');img.hidden=!src;if(src)img.src=src;else img.removeAttribute('src');$('#coverStatus').textContent=state.coverDraft?'Nouvelle image sélectionnée et compressée.':src?'Image actuellement publiée.':'Aucune couverture sélectionnée.';$('#removeCover').disabled=!src;}
+function updateSelectedImage(node){if(state.selectedImage&&state.selectedImage.isConnected)state.selectedImage.classList.remove('image-selected');const ed=$('#richEditor');state.selectedImage=(node&&ed?.contains(node)&&node.tagName==='IMG')?node:null;if(state.selectedImage)state.selectedImage.classList.add('image-selected');const tools=$('#selectedImageTools');if(tools)tools.hidden=!state.selectedImage;}
 function render(){const isNews=state.tab==='news';$('#tabNews').classList.toggle('active',isNews);$('#tabEvents').classList.toggle('active',!isNews);$('#tabNews').setAttribute('aria-selected',String(isNews));$('#tabEvents').setAttribute('aria-selected',String(!isNews));renderList();renderForm();}
-function chooseTab(tab){if(state.busy||!['news','events'].includes(tab))return;state.tab=tab;state.editingId=null;render();}
-function startEdit(id){if(state.busy)return;state.editingId=id;render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});}
-function createRecord(form){const fd=new FormData(form),r={};for(const f of FIELDS[state.tab])r[f.key]=String(fd.get(f.key)||'').trim();
- if(!r.date||!r.title||(state.tab==='news'&&!r.summary))throw Error('Complète les champs obligatoires.');
- if(state.tab==='events'&&r.end&&r.end<r.date)throw Error('La date de fin précède la date de début.');
- const urlField=state.tab==='news'?'url':'source';if(r[urlField]&&!/^https:\/\//i.test(r[urlField]))throw Error('Les liens doivent commencer par https://.');
- const original=state.records[state.tab].find(x=>x.id===state.editingId);
- r.id=original?.id||('pub-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8));return r;
-}
-async function writeRemote(type,records,sha,commit){const payload={message:commit,branch:state.branch,content:encode64(JSON.stringify(records,null,2)+'\n'),sha};
- const response=await fetch(githubUrl(PATHS[type]),{method:'PUT',headers:{...headers(),'Content-Type':'application/json'},body:JSON.stringify(payload)});
- const result=await response.json().catch(()=>({}));
- if(!response.ok){if(response.status===409||response.status===422)throw Error('Conflit possible : le fichier a changé sur GitHub. Clique sur « Actualiser les contenus » avant de réessayer.');throw Error(`Publication impossible (HTTP ${response.status}) : ${result.message||'vérifiez les permissions GitHub'}`);}
- return result.content?.sha||'';
-}
+function chooseTab(tab){if(state.busy||!['news','events'].includes(tab)||tab===state.tab)return;if(!confirmDiscard())return;resetDraft();state.tab=tab;render();}
+function startEdit(id){if(state.busy||!confirmDiscard())return;resetDraft();state.editingId=id;render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});}
+function createRecord(form){const fd=new FormData(form),original=state.records[state.tab].find(x=>x.id===state.editingId);const r=original?{...original}:{};
+ for(const f of FIELDS[state.tab])r[f.key]=String(fd.get(f.key)||'').trim();if(!r.date||!r.title||(state.tab==='news'&&!r.summary))throw Error('Complète les champs obligatoires.');if(state.tab==='events'&&r.end&&r.end<r.date)throw Error('La date de fin précède la date de début.');const urlField=state.tab==='news'?'url':'source';if(r[urlField]&&!/^https:\/\/\S+$/i.test(r[urlField]))throw Error('Les liens doivent commencer par https://.');r.id=original?.id||('pub-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8));return r;}
+async function writeRemote(type,records,sha,commit){const payload={message:commit,branch:state.branch,content:encode64(JSON.stringify(records,null,2)+'\n'),sha};const {response,result}=await api(PATHS[type],'PUT',payload);if(!response.ok){if(response.status===409||response.status===422)throw Error('Conflit : les contenus ont changé sur GitHub. Actualise-les avant de réessayer.');throw Error(`Publication impossible (HTTP ${response.status}) : ${result.message||'vérifie les permissions GitHub'}`);}return result.content?.sha||'';}
+async function assertUnchanged(type){const fresh=await readRemote(type);if(fresh.sha!==state.sha[type])throw Error('Une autre modification a été publiée sur GitHub. Recharge les contenus avant de recommencer.');}
+function photoId(){return Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,12);}
+async function compressPhoto(file){if(!file||!['image/jpeg','image/png','image/webp'].includes(file.type))throw Error('Choisis une image JPEG, PNG ou WebP. Les GIF et SVG ne sont pas acceptés.');if(file.size>15*1024*1024)throw Error('Cette image dépasse 15 Mo. Réduis sa taille avant de la sélectionner.');
+ let bitmap;try{bitmap=await createImageBitmap(file);}catch{throw Error('Impossible de lire cette image. Essaie en JPEG ou PNG.');}
+ try{let scale=Math.min(1,1600/Math.max(bitmap.width,bitmap.height));for(let attempt=0;attempt<5;attempt++){
+  const canvas=document.createElement('canvas');canvas.width=Math.max(1,Math.round(bitmap.width*scale));canvas.height=Math.max(1,Math.round(bitmap.height*scale));const ctx=canvas.getContext('2d',{alpha:false});ctx.fillStyle='#ffffff';ctx.fillRect(0,0,canvas.width,canvas.height);ctx.drawImage(bitmap,0,0,canvas.width,canvas.height);
+  const quality=[.83,.76,.69,.63,.60][attempt];let blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/webp',quality));let ext='webp';if(!blob||blob.type!=='image/webp'){blob=await new Promise(resolve=>canvas.toBlob(resolve,'image/jpeg',quality));ext='jpg';}
+  canvas.width=0;canvas.height=0;
+  if(!blob)throw Error('Compression de l’image impossible sur cet appareil.');if(blob.size<=1.5*1024*1024)return {blob,ext,size:blob.size,width:Math.round(bitmap.width*scale),height:Math.round(bitmap.height*scale)};scale*=.78;
+ }throw Error('Cette photo reste trop lourde après compression.');}finally{bitmap.close?.();}}
+function saveRange(){const selection=window.getSelection(),editor=$('#richEditor');if(selection&&selection.rangeCount&&editor&&(editor.contains(selection.anchorNode)||selection.anchorNode===editor))state.editorRange=selection.getRangeAt(0).cloneRange();}
+function restoreRange(){const editor=$('#richEditor');editor.focus();let range=state.editorRange;const sel=window.getSelection();if(range&&editor.contains(range.commonAncestorContainer)){sel.removeAllRanges();sel.addRange(range);}else{range=document.createRange();range.selectNodeContents(editor);range.collapse(false);sel.removeAllRanges();sel.addRange(range);}}
+function applyFormat(cmd){restoreRange();const format={'bold':['bold'],italic:['italic'],underline:['underline'],h2:['formatBlock','h2'],h3:['formatBlock','h3'],ul:['insertUnorderedList'],ol:['insertOrderedList'],quote:['formatBlock','blockquote'],unlink:['unlink']};
+ if(cmd==='link'){const value=prompt('Adresse du lien (https://…) :','https://');if(value===null)return;if(!/^https:\/\/\S+$/i.test(value)){message('Le lien doit commencer par https://.','error');return;}document.execCommand('createLink',false,value);}
+ else if(format[cmd])document.execCommand(format[cmd][0],false,format[cmd][1]||null);state.dirty=true;saveRange();}
+async function prepareImage(file){const img=await compressPhoto(file);const url=URL.createObjectURL(img.blob);state.pendingMedia.set(url,{...img,remotePath:null});return url;}
+async function selectCover(file){if(!file)return;setBusy(true);try{const compressed=await compressPhoto(file);if(state.coverDraft)URL.revokeObjectURL(state.coverDraft.url);state.coverDraft={...compressed,url:URL.createObjectURL(compressed.blob),remotePath:null};state.coverRemoved=false;state.dirty=true;refreshCover(state.records.news.find(r=>r.id===state.editingId)||{});message('Image de couverture prête ('+Math.round(compressed.size/1024)+' Ko).','ok');}catch(error){message(error.message,'error');}finally{setBusy(false);}}
+function removeCover(){if(state.coverDraft)URL.revokeObjectURL(state.coverDraft.url);state.coverDraft=null;state.coverRemoved=true;state.dirty=true;refreshCover(state.records.news.find(r=>r.id===state.editingId)||{});}
+async function insertInline(file,replace=false){if(!file)return;setBusy(true);try{const url=await prepareImage(file);if(replace&&state.selectedImage?.isConnected){const img=state.selectedImage;img.src=url;img.alt=prompt('Description de cette image (accessibilité) :',img.alt||'Illustration de l’article')||'Illustration de l’article';updateSelectedImage(img);}
+ else{restoreRange();const alt=prompt('Description de cette image (accessibilité) :','Photographie de la publication')||'Photographie de la publication';document.execCommand('insertHTML',false,`<figure><img src="${escapeHtml(url)}" alt="${escapeHtml(alt)}"></figure><p><br></p>`);saveRange();}
+ state.dirty=true;message('Image insérée et compressée. Elle sera envoyée à GitHub lors de la publication.','ok');}catch(error){message(error.message,'error');}finally{setBusy(false);}}
+function deleteInline(){const img=state.selectedImage;if(!img)return;const parent=img.closest('figure');if(parent&&parent.querySelectorAll('img').length===1)parent.remove();else img.remove();updateSelectedImage(null);state.dirty=true;}
+function draftHtml(){return $('#richEditor')?.innerHTML||'';}
+function mediaLinksInEditor(){return [...new Set(Array.from($('#richEditor')?.querySelectorAll('img')||[]).map(el=>el.getAttribute('src')||'').filter(s=>s.startsWith('blob:')))];}
+async function uploadBlob(blob,ext,role){const path=`media/actualites/${photoId()}-${role}.${ext}`;const content=await base64Blob(blob);const payload={message:`SNUDI FO 30 : ajout d’image d’actualité (${role})`,branch:state.branch,content};const {response,result}=await api(path,'PUT',payload);if(!response.ok)throw Error(`Envoi de l’image impossible (HTTP ${response.status}) : ${result.message||'vérifie les permissions ou la taille'}`);return './'+path;}
+async function uploadPendingMedia(record){let html=draftHtml();const temp=document.createElement('div');temp.innerHTML=SnudiArticle.sanitize(html,{allowBlobs:true});const images=Array.from(temp.querySelectorAll('img'));const blobSources=[...new Set(images.map(i=>i.getAttribute('src')||'').filter(s=>s.startsWith('blob:')))];
+ for(const src of blobSources){const entry=state.pendingMedia.get(src);if(!entry)throw Error('Une image provisoire n’est plus accessible. Réinsère-la.');if(!entry.remotePath)entry.remotePath=await uploadBlob(entry.blob,entry.ext,'article');for(const image of images)if(image.getAttribute('src')===src)image.setAttribute('src',entry.remotePath);}
+ record.bodyHtml=SnudiArticle.sanitize(temp.innerHTML);delete record.body;
+ if(state.coverDraft){if(!state.coverDraft.remotePath)state.coverDraft.remotePath=await uploadBlob(state.coverDraft.blob,state.coverDraft.ext,'couverture');record.cover=state.coverDraft.remotePath;}
+ else if(state.coverRemoved)delete record.cover;
+ return record;}
+async function cleanUnusedMedia(previousRecords,currentRecords){const previous=new Set(previousRecords.flatMap(r=>[...usedPaths(r)]));const current=new Set(currentRecords.flatMap(r=>[...usedPaths(r)]));const obsolete=[...previous].filter(path=>!current.has(path));if(!obsolete.length)return {deleted:0,errors:[]};const errors=[];let deleted=0;
+ for(const path of obsolete){try{const {response,result}=await api(path.replace(/^\.\//,''));if(response.status===404)continue;if(!response.ok||!result.sha)throw Error('Fichier introuvable ou inaccessible');const deletion=await api(path.replace(/^\.\//,''),'DELETE',{message:'SNUDI FO 30 : retrait d’une image non utilisée',branch:state.branch,sha:result.sha});if(!deletion.response.ok)throw Error(`HTTP ${deletion.response.status}`);deleted++;}catch(error){errors.push(path+': '+error.message);}}
+ return {deleted,errors};}
 async function publish(event){event.preventDefault();if(state.busy)return;let record;try{record=createRecord(event.currentTarget);}catch(error){message(error.message,'error');return;}
- const type=state.tab;const list=[...state.records[type]];const position=list.findIndex(x=>x.id===record.id);if(position<0)list.unshift(record);else list[position]=record;
+ const type=state.tab;const before=[...state.records[type]];const list=[...before];const position=list.findIndex(x=>x.id===record.id);
  if(!confirm(`Publier ${position<0?'la nouvelle entrée':'les modifications'} « ${record.title} » sur GitHub ?`))return;
- setBusy(true);try{const newSha=await writeRemote(type,list,state.sha[type],`SNUDI FO 30 : ${position<0?'ajout':'mise à jour'} ${type==='news'?'actualité':'calendrier'} — ${record.title.slice(0,55)}`);state.sha[type]=newSha;state.records[type]=list;state.editingId=null;render();message('Publication enregistrée sur GitHub. Le déploiement GitHub Pages doit ensuite se terminer.','ok');}catch(error){message(error.message,'error');}finally{setBusy(false);}
-}
-async function removeRecord(id){if(state.busy)return;const type=state.tab;const old=state.records[type].find(x=>x.id===id);if(!old)return;if(!confirm(`Supprimer définitivement « ${old.title} » du contenu public sur GitHub ?`))return;
- setBusy(true);try{const updated=state.records[type].filter(x=>x.id!==id);const sha=await writeRemote(type,updated,state.sha[type],`SNUDI FO 30 : suppression ${type==='news'?'actualité':'événement'} — ${old.title.slice(0,55)}`);state.sha[type]=sha;state.records[type]=updated;state.editingId=null;render();message('Suppression enregistrée sur GitHub.','ok');}catch(error){message(error.message,'error');}finally{setBusy(false);}
-}
+ setBusy(true);let mediaUploaded=false;
+ try{await assertUnchanged(type);if(type==='news'){const needed=mediaLinksInEditor().length+(state.coverDraft?1:0);if(needed)message(`Préparation et envoi de ${needed} image(s) sur GitHub…`);record=await uploadPendingMedia(record);mediaUploaded=needed>0;}
+ if(position<0)list.unshift(record);else list[position]=record;
+ const newSha=await writeRemote(type,list,state.sha[type],`SNUDI FO 30 : ${position<0?'ajout':'mise à jour'} ${type==='news'?'actualité':'calendrier'} — ${record.title.slice(0,55)}`);
+ state.sha[type]=newSha;state.records[type]=list;const cleanup=type==='news'?await cleanUnusedMedia(before,list):{deleted:0,errors:[]};resetDraft();render();
+ message('Publication enregistrée sur GitHub. '+(cleanup.errors.length?`${cleanup.errors.length} ancienne(s) image(s) n’ont pas pu être supprimées ; le contenu reste publié.`:'Le déploiement GitHub Pages doit ensuite se terminer.'),cleanup.errors.length?'':'ok');
+ }catch(error){message(error.message+(mediaUploaded?' Des images déjà envoyées peuvent rester sur GitHub ; réessaie la publication avant d’abandonner ce formulaire.':''),'error');}finally{setBusy(false);}}
+async function removeRecord(id){if(state.busy||!confirmDiscard())return;const type=state.tab;const old=state.records[type].find(x=>x.id===id);if(!old)return;if(!confirm(`Supprimer définitivement « ${old.title} » du contenu public sur GitHub ?`))return;
+ setBusy(true);try{await assertUnchanged(type);const before=[...state.records[type]],updated=before.filter(x=>x.id!==id);const sha=await writeRemote(type,updated,state.sha[type],`SNUDI FO 30 : suppression ${type==='news'?'actualité':'événement'} — ${old.title.slice(0,55)}`);state.sha[type]=sha;state.records[type]=updated;const cleanup=type==='news'?await cleanUnusedMedia(before,updated):{errors:[]};resetDraft();render();message(cleanup.errors.length?'Publication supprimée. Certaines anciennes images restent à nettoyer sur GitHub.':'Suppression enregistrée sur GitHub.','ok');}catch(error){message(error.message,'error');}finally{setBusy(false);}}
+function previewArticle(){if(state.tab!=='news')return;const f=$('#recordForm');const dialog=$('#previewDialog');$('#previewTitle').textContent=f.elements.title?.value||'Sans titre';$('#previewMeta').textContent=`${f.elements.date?.value||today()} · ${f.elements.tag?.value||'Actualité'}`;$('#previewSummary').textContent=f.elements.summary?.value||'';const cover=state.coverDraft?.url||(!state.coverRemoved?SnudiArticle.asPath(state.records.news.find(x=>x.id===state.editingId)?.cover||''):'');$('#previewCover').hidden=!cover;if(cover)$('#previewCover').src=cover;else $('#previewCover').removeAttribute('src');$('#previewBody').innerHTML=SnudiArticle.sanitize(draftHtml(),{allowBlobs:true});dialog.showModal();}
 function backup(){const content={generatedAt:new Date().toISOString(),news:state.records.news,events:state.records.events};const blob=new Blob([JSON.stringify(content,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sauvegarde-snudi-fo-30.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function disconnect(){state.token='';state.owner='';state.repo='';state.sha={news:'',events:''};state.records={news:[],events:[]};state.editingId=null;$('#workspace').hidden=true;$('#connection').hidden=false;$('#token').value='';message('Déconnecté. Le jeton n’a pas été conservé.');}
+function disconnect(){if(state.busy||!confirmDiscard())return;resetDraft();state.token='';state.owner='';state.repo='';state.sha={news:'',events:''};state.records={news:[],events:[]};$('#workspace').hidden=true;$('#connection').hidden=false;$('#token').value='';message('Déconnecté. Le jeton n’a pas été conservé.');}
 $('#connectForm').addEventListener('submit',connect);
 $('#recordForm').addEventListener('submit',publish);
 $('#tabNews').addEventListener('click',()=>chooseTab('news'));
 $('#tabEvents').addEventListener('click',()=>chooseTab('events'));
-$('#newButton').addEventListener('click',()=>{state.editingId=null;render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});});
-$('#recordForm').addEventListener('click',e=>{if(e.target.closest('#cancelEdit')){state.editingId=null;render();}});
+$('#newButton').addEventListener('click',()=>{if(state.busy||!confirmDiscard())return;resetDraft();render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});});
+$('#recordForm').addEventListener('input',e=>{state.dirty=true;if(e.target.id==='richEditor')saveRange();});
+$('#recordForm').addEventListener('change',e=>{if(['coverFile','inlineImageInput','replaceInlineInput'].includes(e.target.id)){const file=e.target.files?.[0];if(e.target.id==='coverFile')selectCover(file);else insertInline(file,e.target.id==='replaceInlineInput');e.target.value='';}else state.dirty=true;});
+$('#recordForm').addEventListener('mousedown',e=>{if(e.target.closest('.rich-tool')){saveRange();e.preventDefault();}});
+$('#recordForm').addEventListener('click',e=>{const cmd=e.target.closest('[data-cmd]');if(cmd){applyFormat(cmd.dataset.cmd);return;}if(e.target.closest('#cancelEdit')){if(!confirmDiscard())return;resetDraft();render();return;}if(e.target.closest('#previewArticle')){previewArticle();return;}if(e.target.closest('#removeCover')){removeCover();return;}
+ if(e.target.closest('#insertInlineImage')){saveRange();$('#inlineImageInput').click();return;}if(e.target.closest('#replaceInline')){$('#replaceInlineInput').click();return;}if(e.target.closest('#deleteInline')){deleteInline();return;}
+ const image=e.target.closest('#richEditor img');if(image)updateSelectedImage(image);
+ });
+$('#recordForm').addEventListener('mouseup',e=>{if(e.target.closest('#richEditor'))saveRange();});
+$('#recordForm').addEventListener('keyup',e=>{if(e.target.closest('#richEditor'))saveRange();});
 $('#recordList').addEventListener('click',e=>{const b=e.target.closest('[data-action]');if(!b)return;if(b.dataset.action==='edit')startEdit(b.dataset.id);if(b.dataset.action==='delete')removeRecord(b.dataset.id);});
-$('#reloadButton').addEventListener('click',()=>reloadAll().catch(()=>{}));
+$('#reloadButton').addEventListener('click',()=>{if(!confirmDiscard())return;reloadAll().catch(()=>{});});
 $('#backupButton').addEventListener('click',backup);
 $('#disconnectButton').addEventListener('click',disconnect);
+$('#closePreview').addEventListener('click',()=>$('#previewDialog').close());
+window.addEventListener('beforeunload',e=>{if(state.dirty){e.preventDefault();e.returnValue='';}});
 autoSuggestRepo();

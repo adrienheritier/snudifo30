@@ -1,5 +1,5 @@
-const CACHE_NAME = 'snudifo30-v2.0';
-const APP_FILES = ['./','./index.html','./styles.css','./app.js','./manifest.webmanifest','./content/news.json','./content/events.json','./assets/logo-snudi-original.jpg','./assets/icon-192.png','./assets/icon-512.png'];
+const CACHE_NAME = 'snudifo30-v3.0';
+const APP_FILES = ['./','./index.html','./styles.css','./app.js','./article-content.js','./manifest.webmanifest','./content/news.json','./content/events.json','./assets/logo-snudi-original.jpg','./assets/icon-192.png','./assets/icon-512.png'];
 self.addEventListener('install', event => {
  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));
 });
