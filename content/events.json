@@ -66,15 +66,15 @@
     "source": "https://www.education.gouv.fr/mutation-des-personnels-enseignants-du-premier-degre-5498"
   },
   {
-    "id": "e3",
     "date": "2026-12-03",
-    "time": "",
-    "end": "",
-    "title": "Formation syndicale « PE : connaître ses droits » (jour 1)",
+    "end": "2026-12-04",
+    "time": "09:00",
     "type": "Formation",
-    "place": "Gard — lieu et horaires à confirmer",
+    "title": "Formation syndicale « PE : connaître ses droits »",
+    "place": "Nîmes",
     "status": "À confirmer",
-    "source": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie"
+    "source": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie",
+    "id": "e3"
   },
   {
     "id": "e4",
