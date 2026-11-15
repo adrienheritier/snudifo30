@@ -171,7 +171,8 @@
     "title": "Site officiel du SNUDI-FO du Gard",
     "summary": "Ressource de référence à consulter.",
     "bodyHtml": "<p>Ouvrez la ressource pour consulter la version publiée par son éditeur.</p>",
-    "url": "https://snudi30.force-ouvriere.org/"
+    "url": "https://snudi30.force-ouvriere.org/",
+    "order": 3
   },
   {
     "id": "d3",
@@ -181,7 +182,8 @@
     "bodyHtml": "<p>D'autres formations seront programmées en période 4.&nbsp;</p><p>Le planning sera confirmé prochainement.</p>",
     "url": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie",
     "tag": "",
-    "cover": "./media/outils/mwi1ozmo-5tosnyr18u-couverture.webp"
+    "cover": "./media/outils/mwi1ozmo-5tosnyr18u-couverture.webp",
+    "order": 0
   },
   {
     "id": "d5",
@@ -191,7 +193,8 @@
     "bodyHtml": "<p><br></p>",
     "url": "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000034326444/",
     "tag": "",
-    "cover": "./media/outils/mwi23p1h-3hi2fr7v66-couverture.webp"
+    "cover": "./media/outils/mwi23p1h-3hi2fr7v66-couverture.webp",
+    "order": 1
   },
   {
     "id": "d6",
@@ -199,6 +202,7 @@
     "title": "Guide national AESH",
     "summary": "Ressource de référence à consulter.",
     "bodyHtml": "<p>Ouvrez la ressource pour consulter la version publiée par son éditeur.</p>",
-    "url": "https://www.education.gouv.fr/etre-accompagnant-des-eleves-en-situation-de-handicap-aesh-12188"
+    "url": "https://www.education.gouv.fr/etre-accompagnant-des-eleves-en-situation-de-handicap-aesh-12188",
+    "order": 2
   }
 ]
