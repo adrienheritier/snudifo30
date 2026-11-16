@@ -61,24 +61,6 @@
     ]
   },
   {
-    "id": "b-inter",
-    "section": "bareme",
-    "title": "Simuler le barème interdépartemental",
-    "summary": "Accéder au comparateur officiel du ministère.",
-    "bodyHtml": "<p>Le comparateur officiel permet d’estimer le barème selon les règles de la campagne. Vérifiez toujours les pièces justificatives et les dates publiées.</p>",
-    "url": "https://info-mutations.phm.education.gouv.fr/cmpmo-front/",
-    "order": 1
-  },
-  {
-    "id": "b-intra",
-    "section": "bareme",
-    "title": "Mouvement intra-départemental du Gard",
-    "summary": "Informations et ressources sur le mouvement dans le Gard.",
-    "bodyHtml": "<p>Les règles du mouvement intra-départemental sont différentes de celles du mouvement interdépartemental. Consultez les règles départementales en vigueur avant tout calcul.</p>",
-    "url": "https://snudi30.force-ouvriere.org/-mutation-mouvement-departemental-",
-    "order": 0
-  },
-  {
     "id": "t1",
     "section": "modeles",
     "title": "Demande de rendez-vous",
