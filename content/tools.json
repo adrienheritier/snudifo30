@@ -207,11 +207,12 @@
   },
   {
     "id": "d6",
-    "section": "documents",
+    "section": "fiches",
     "title": "Guide national AESH",
     "summary": "Ressource de référence à consulter.",
     "bodyHtml": "<p>Ouvrez la ressource pour consulter la version publiée par son éditeur.</p>",
     "url": "https://www.education.gouv.fr/etre-accompagnant-des-eleves-en-situation-de-handicap-aesh-12188",
-    "order": 2
+    "order": 12,
+    "tag": ""
   }
 ]
