@@ -28,14 +28,14 @@ const FIELDS = {
   {key:'source',label:'Lien pour plus d’informations (facultatif)',type:'url',placeholder:'https://…'}
  ],
  tools:[
-  {key:'section',label:'Rubrique de Mes outils',type:'select',options:['affichages','fiches','modeles','bareme','documents'],required:true},
+  {key:'section',label:'Rubrique de Mes outils',type:'select',options:['affichages','fiches','dossiers','modeles','documents'],required:true},
   {key:'title',label:'Titre du contenu',type:'text',required:true,placeholder:'Titre de la fiche, du modèle ou de la ressource'},
   {key:'summary',label:'Résumé affiché dans la liste',type:'textarea',required:true,placeholder:'Quelques lignes qui décrivent ce contenu'},
   {key:'tag',label:'Sous-catégorie (facultatif)',type:'text',placeholder:'Ex. AESH, Carrière, Administration'},
   {key:'url',label:'Lien principal vers la ressource ou le PDF (facultatif)',type:'url',placeholder:'https://…'}
  ]
 };
-const SECTION_NAMES={affichages:'Affichages écoles',fiches:'Fiches pratiques',modeles:'Modèles de courriers',bareme:'Barème mouvement',documents:'Archives (non publiées)'};
+const SECTION_NAMES={affichages:'Affichages écoles',fiches:'Mes droits',dossiers:'Dossiers thématiques',modeles:'Modèles de courriers',documents:'Archives (non publiées)'};
 // Compatibilité : les anciennes fiches sans « order » gardent leur ordre d'origine dans tools.json.
 function orderedTools(records,section){return records.filter(r=>r.section===section).map((record,index)=>({record,index})).sort((a,b)=>{
  const av=Number.isSafeInteger(a.record.order)&&a.record.order>=0?a.record.order:a.index;
@@ -98,7 +98,7 @@ function renderList(){
  const sections=Object.keys(SECTION_NAMES),positions=new Map();
  if(state.tab==='tools')sections.forEach(section=>orderedTools(state.records.tools,section).forEach((record,index)=>positions.set(record.id,index)));
  const records=[...state.records[state.tab]]
-  .filter(r=>state.tab!=='tools'||state.toolsFilter==='all'||r.section===state.toolsFilter)
+  .filter(r=>state.tab!=='tools'||(Boolean(SECTION_NAMES[r.section])&&(state.toolsFilter==='all'||r.section===state.toolsFilter)))
   .sort((a,b)=>state.tab==='news'?(b.date||'').localeCompare(a.date||''):state.tab==='events'?(a.date||'').localeCompare(b.date||''):sections.indexOf(a.section)-sections.indexOf(b.section)||(positions.get(a.id)??0)-(positions.get(b.id)??0));
  $('#listTitle').textContent=(state.tab==='news'?'Actualités':state.tab==='events'?'Événements':'Contenus des outils')+` (${records.length})`;
  if(!records.length){list.append(mk('p','muted','Aucune entrée. Ajoute une première publication.'));return;}
@@ -107,7 +107,7 @@ function markupFromLegacy(body){return String(body||'').split(/\n\s*\n/).filter(
 function coverArea(rec){const wrap=mk('section','media-control');const label=mk('div','media-control-title','Image de couverture (facultative)');wrap.append(label);wrap.append(mk('p','field-hint',state.tab==='tools'?'Visible dans la liste des outils et en haut de la fiche. JPEG, PNG ou WebP, optimisé avant envoi.':'Visible sur les cartes d’actualité et en haut de l’article. JPEG, PNG ou WebP, optimisé avant envoi.'));
  const img=mk('img','admin-cover-preview');img.id='coverPreview';img.alt='Aperçu de la couverture';img.hidden=true;wrap.append(img);
  const controls=mk('div','flex-wrap');const choose=mk('label','btn btn-outline btn-sm upload-label','Choisir une image');choose.htmlFor='coverFile';const input=mk('input');input.type='file';input.id='coverFile';input.accept='image/jpeg,image/png,image/webp';input.hidden=true;choose.append(input);const remove=mk('button','btn btn-neutral btn-sm','Retirer l’image');remove.type='button';remove.id='removeCover';controls.append(choose,remove);wrap.append(controls);const info=mk('div','field-hint');info.id='coverStatus';wrap.append(info);return wrap;}
-function richEditorArea(rec){const wrap=mk('section','rich-section');const label=mk('div','media-control-title',state.tab==='tools'?'Contenu de la fiche / du modèle':'Contenu de l’article');wrap.append(label);wrap.append(mk('p','field-hint',state.tab==='tools'?'Mise en forme et images intégrées. Pour les modèles de courrier, le texte édité sera également copiable.':'Mise en forme et images intégrées. Les anciennes actualités restent modifiables.'));
+function richEditorArea(rec){const wrap=mk('section','rich-section');const label=mk('div','media-control-title',state.tab==='tools'?'Contenu de la publication':'Contenu de l’article');label.id='richEditorLabel';wrap.append(label);wrap.append(mk('p','field-hint',state.tab==='tools'?'Mise en forme et images intégrées. Pour les modèles de courrier, le texte édité sera également copiable.':'Mise en forme et images intégrées. Les anciennes actualités restent modifiables.'));
  const bar=mk('div','rich-toolbar');bar.setAttribute('role','toolbar');bar.setAttribute('aria-label','Mise en forme de l’article');const controls=[['bold','Gras','G'],['italic','Italique','I'],['underline','Souligné','S'],['h2','Titre H2','H2'],['h3','Sous-titre H3','H3'],['ul','Liste à puces','• Liste'],['ol','Liste numérotée','1. Liste'],['quote','Citation','❝'],['link','Créer un lien','Lien'],['unlink','Enlever le lien','Sans lien']];
  controls.forEach(([cmd,title,label])=>{const b=mk('button','rich-tool',label);b.type='button';b.title=title;b.setAttribute('aria-label',title);b.dataset.cmd=cmd;bar.append(b);});
  const imageButton=mk('button','rich-tool rich-tool-image','＋ Image dans le texte');imageButton.type='button';imageButton.id='insertInlineImage';bar.append(imageButton);wrap.append(bar);
@@ -228,14 +228,20 @@ async function cleanUnreferencedPdfs(candidatePaths){
  return {deleted,errors,retained};
 }
 function pdfLinksArea(rec){const wrap=mk('section','pdf-link-editor');wrap.id='pdfLinksArea';const title=mk('label','media-control-title','Liens PDF externes (facultatif)');title.htmlFor='field_downloads';wrap.append(title);wrap.append(mk('p','field-hint','Un document par ligne : Nom du fichier | https://adresse-du-pdf. Tu peux aussi insérer des liens directement dans le texte enrichi. Les PDF ne seront pas téléchargés sur GitHub.'));const textarea=mk('textarea','input');textarea.id='field_downloads';textarea.name='downloads';textarea.rows=4;textarea.placeholder='Affiche syndicale | https://exemple.fr/affiche.pdf\nPanneau syndical | https://exemple.fr/panneau.pdf';textarea.value=Array.isArray(rec.downloads)?rec.downloads.map(d=>`${d.label} | ${d.url}`).join('\n'):'';wrap.append(textarea);return wrap;}
-function showPdfLinks(){const section=$('#field_section')?.value;const box=$('#pdfLinksArea');if(box)box.hidden=section!=='affichages';const help=$('#pdfLinksHelp');if(help)help.hidden=section!=='affichages';}
+function showPdfLinks(){const section=$('#field_section')?.value;const box=$('#pdfLinksArea');if(box)box.hidden=!['affichages','dossiers'].includes(section);const help=$('#pdfLinksHelp');if(help)help.hidden=!['affichages','dossiers'].includes(section);}
+function updateToolFormContext(){
+ if(state.tab!=='tools')return;
+ const section=$('#field_section')?.value||'affichages',label=SECTION_NAMES[section]||'Mes outils',isEditing=Boolean(state.editingId);
+ $('#editorTitle').textContent=(isEditing?'Modifier : ':'Nouvelle publication : ')+label;
+ const richLabel=$('#richEditorLabel');if(richLabel)richLabel.textContent=section==='dossiers'?'Contenu du dossier thématique':section==='fiches'?'Contenu de la fiche de droits':section==='modeles'?'Contenu du modèle de courrier':'Contenu de l’affichage';
+}
 function renderForm(){const form=$('#recordForm');form.replaceChildren();const rec=state.records[state.tab].find(r=>r.id===state.editingId)||{};$('#editorTitle').textContent=(state.editingId?'Modifier ':'Nouvelle ')+(state.tab==='news'?'actualité':state.tab==='events'?'entrée du calendrier':'fiche / ressource des outils');$('#editingBadge').hidden=!state.editingId;
  for(const f of FIELDS[state.tab]){if((state.tab==='news'||state.tab==='tools')&&f.key==='url'){form.append(coverArea(rec),richEditorArea(rec));}const initial=rec[f.key]||(!state.editingId&&f.key==='date'?today():(!state.editingId&&f.key==='tag'&&state.tab==='news'?'Actualité':(!state.editingId&&f.key==='section'?(state.toolsFilter!=='all'?state.toolsFilter:'affichages'):'')));form.append(field(f,initial));}
- if(state.tab==='tools'){form.append(pdfLinksArea(rec));const help=mk('p','field-hint','Affichages écoles : tu peux conserver les liens PDF externes existants ou utiliser la bibliothèque de PDF hébergée sur GitHub.');help.id='pdfLinksHelp';form.append(help);showPdfLinks();}
+ if(state.tab==='tools'){form.append(pdfLinksArea(rec));const help=mk('p','field-hint','Affichages écoles et Dossiers thématiques : tu peux ajouter plusieurs liens PDF externes, ou réutiliser des PDF de la bibliothèque GitHub.');help.id='pdfLinksHelp';form.append(help);showPdfLinks();}
  form.append(pdfAttachmentsArea());
  const actions=mk('div','form-actions');{const preview=mk('button','btn btn-outline',state.tab==='tools'?'Prévisualiser la fiche':state.tab==='events'?'Prévisualiser les PDF':'Prévisualiser l’article');preview.type='button';preview.id='previewArticle';actions.append(preview);}const save=mk('button','btn btn-primary',state.editingId?'Publier les modifications':'Publier sur GitHub');save.type='submit';const reset=mk('button','btn btn-neutral','Annuler');reset.type='button';reset.id='cancelEdit';actions.append(save,reset);form.append(actions);
- const help=mk('p','field-hint',state.tab==='news'?'Les photos sont enregistrées dans le dépôt avec le jeton GitHub actuel. Une publication peut nécessiter plusieurs commits (images puis article).':state.tab==='events'?'Les catégories correspondent aux filtres de l’agenda public.':'Les quatre rubriques publiques sont : Affichages écoles, Fiches pratiques, Modèles de courriers et Barème mouvement. Les contenus de « Archives (non publiées) » sont conservés, sans apparaître dans l’application publique. Les images sont publiées dans media/outils/.');form.append(help);
- if(state.tab!=='events'){refreshCover(rec);updateSelectedImage(null);}renderPdfAttachments();}
+ const help=mk('p','field-hint',state.tab==='news'?'Les photos sont enregistrées dans le dépôt avec le jeton GitHub actuel. Une publication peut nécessiter plusieurs commits (images puis article).':state.tab==='events'?'Les catégories correspondent aux filtres de l’agenda public.':'Les quatre rubriques publiques sont : Affichages écoles, Mes droits, Dossiers thématiques et Modèles de courriers. La catégorie « Archives (non publiées) » n’apparaît pas dans l’application publique. Tu peux créer des dossiers longs avec titres, images, liens et PDF partagés. Les images sont publiées dans media/outils/.');form.append(help);
+ if(state.tab!=='events'){refreshCover(rec);updateSelectedImage(null);}renderPdfAttachments();updateToolFormContext();}
 function refreshCover(rec={}){const img=$('#coverPreview');if(!img)return;const src=state.coverDraft?.url||(!state.coverRemoved?SnudiArticle.asPath(rec.cover||''):'');img.hidden=!src;if(src)img.src=src;else img.removeAttribute('src');$('#coverStatus').textContent=state.coverDraft?'Nouvelle image sélectionnée et compressée.':src?'Image actuellement publiée.':'Aucune couverture sélectionnée.';$('#removeCover').disabled=!src;}
 function updateSelectedImage(node){if(state.selectedImage&&state.selectedImage.isConnected)state.selectedImage.classList.remove('image-selected');const ed=$('#richEditor');state.selectedImage=(node&&ed?.contains(node)&&node.tagName==='IMG')?node:null;if(state.selectedImage)state.selectedImage.classList.add('image-selected');const tools=$('#selectedImageTools');if(tools)tools.hidden=!state.selectedImage;}
 function renderReorder(){
@@ -293,7 +299,35 @@ async function saveReorder(){
   message('Nouvel ordre enregistré sur GitHub. Il sera visible après le déploiement de GitHub Pages.','ok');
  }catch(error){message(error.message,'error');}finally{setBusy(false);renderReorder();}
 }
-function render(){for(const tab of ['news','events','tools','home']){const button=$('#tab'+tab[0].toUpperCase()+tab.slice(1));const active=tab==='home'?state.view==='home':state.view==='records'&&state.tab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));}$('#adminContentGrid').hidden=state.view==='home';$('#homeBannerAdmin').hidden=state.view!=='home';if(state.view==='home'){renderHomePanel();return;}$('#toolFilterRow').hidden=state.tab!=='tools';$('#toolSectionFilter').value=state.toolsFilter;renderList();renderForm();renderReorder();}
+function renderRetiredBaremePanel(){
+ const panel=$('#retiredBaremePanel'),details=$('#retiredBaremeDescription'),button=$('#deleteRetiredBareme');
+ if(!panel||!details||!button)return;
+ const legacy=state.records.tools.filter(r=>r.section==='bareme');
+ panel.hidden=state.tab!=='tools'||state.view!=='records'||!legacy.length;
+ if(legacy.length){details.textContent=legacy.length+' ancien(s) article(s) « Barème mouvement » sont encore enregistrés dans tools.json. Ils ne sont plus visibles dans l’application. Après sauvegarde, tu peux les supprimer définitivement de GitHub, sans toucher aux autres outils.';button.disabled=state.busy;}
+}
+async function deleteRetiredBareme(){
+ if(state.busy||state.tab!=='tools'||!confirmDiscard()||!ensureReorderClosed())return;
+ const legacy=state.records.tools.filter(r=>r.section==='bareme');if(!legacy.length)return;
+ if(!confirm('Supprimer définitivement les '+legacy.length+' ancien(s) article(s) de « Barème mouvement » sur GitHub ? Cette action ne peut pas être annulée. Exporte une sauvegarde avant de continuer.'))return;
+ setBusy(true);
+ try{
+  await assertUnchanged('tools');
+  const before=[...state.records.tools],updated=before.filter(r=>r.section!=='bareme');
+  const sha=await writeRemote('tools',updated,state.sha.tools,'SNUDI FO 30 : retrait définitif des anciens articles Barème mouvement');
+  state.sha.tools=sha;state.records.tools=updated;
+  // Réutilisation de la bibliothèque partagée : aucun PDF conservé par une autre publication n'est supprimé.
+  const paths=[...new Set(legacy.flatMap(r=>[...SnudiPdf.referencedPaths(r)]))];
+  const pdfResult=await cleanUnreferencedPdfs(paths);
+  // Les images sont nettoyées avec la même routine que lors de la suppression ordinaire d'un outil.
+  const imageResult=await cleanUnusedMedia(before,updated);
+  resetDraft();render();
+  const problems=[...pdfResult.errors,...imageResult.errors];
+  message(legacy.length+' ancien(s) article(s) supprimé(s) de GitHub. '+(pdfResult.deleted?pdfResult.deleted+' PDF inutilisé(s) supprimé(s). ':'')+(problems.length?problems.length+' média(s) non nettoyé(s), à vérifier dans le dépôt.':'Les autres rubriques sont conservées.'),problems.length?'':'ok');
+ }catch(error){message(error.message,'error');}
+ finally{setBusy(false);renderRetiredBaremePanel();}
+}
+function render(){for(const tab of ['news','events','tools','home']){const button=$('#tab'+tab[0].toUpperCase()+tab.slice(1));const active=tab==='home'?state.view==='home':state.view==='records'&&state.tab===tab;button.classList.toggle('active',active);button.setAttribute('aria-selected',String(active));}$('#adminContentGrid').hidden=state.view==='home';$('#homeBannerAdmin').hidden=state.view!=='home';if(state.view==='home'){renderHomePanel();return;}$('#toolFilterRow').hidden=state.tab!=='tools';$('#toolSectionFilter').value=state.toolsFilter;renderList();renderForm();renderReorder();renderRetiredBaremePanel();}
 function confirmHomeDiscard(){return !state.homeDirty||confirm('Le nouveau bandeau n’a pas été publié. Abandonner les modifications ?');}
 function chooseTab(tab){if(state.busy||!['news','events','tools'].includes(tab))return;if(state.view==='home'){if(!confirmHomeDiscard())return;resetHomeDraft();}else if(tab!==state.tab&&(!confirmDiscard()||!ensureReorderClosed()))return;state.view='records';if(tab!==state.tab)resetDraft();state.tab=tab;render();}
 function chooseHomeTab(){if(state.busy||state.view==='home')return;if(!confirmDiscard()||!ensureReorderClosed())return;resetDraft();state.view='home';render();}
@@ -318,7 +352,7 @@ function createRecord(form){const fd=new FormData(form),original=state.records[s
  if(state.tab==='events'&&r.end&&r.end<r.date)throw Error('La date de fin précède la date de début.');
  if(state.tab==='tools'&&!SECTION_NAMES[r.section])throw Error('Choisis une rubrique valide.');
  if(state.tab==='tools'){
-  if(r.section==='affichages'){
+  if(r.section==='affichages'||r.section==='dossiers'){
    const raw=String(fd.get('downloads')||'').trim();const links=[];
    links.push(...parseDownloadLinks(raw));
    if(links.length)r.downloads=links;else delete r.downloads;
@@ -418,7 +452,7 @@ async function removeRecord(id){
 }
 function previewArticle(){const f=$('#recordForm');const dialog=$('#previewDialog');$('#previewTitle').textContent=f.elements.title?.value||'Sans titre';$('#previewMeta').textContent=state.tab==='news'?`${f.elements.date?.value||today()} · ${f.elements.tag?.value||'Actualité'}`:state.tab==='events'?`${f.elements.date?.value||''} · ${f.elements.type?.value||'Événement'}`:SECTION_NAMES[f.elements.section?.value]||'Mes outils';$('#previewSummary').textContent=f.elements.summary?.value||'';const cover=state.coverDraft?.url||(!state.coverRemoved?SnudiArticle.asPath(state.records[state.tab].find(x=>x.id===state.editingId)?.cover||''):'');$('#previewCover').hidden=!cover;if(cover)$('#previewCover').src=cover;else $('#previewCover').removeAttribute('src');$('#previewBody').innerHTML=state.tab==='events'?'':SnudiArticle.sanitize(draftHtml(),{allowBlobs:true});const docs=$('#previewDownloads');docs.replaceChildren();docs.hidden=true;
  const associated=state.pdfDraft.filter(d=>d.label.trim());if(associated.length){docs.hidden=false;docs.append(mk('h3','','PDF joints à cette publication'));for(const d of associated){const row=mk('div','pdf-preview-row');row.append(mk('span','',d.label+(d.file?' (nouveau fichier, pas encore publié)':'')));if(d.path){const a=mk('a','btn btn-outline btn-sm','Ouvrir ↗');a.href=SnudiPdf.href(d.path);a.target='_blank';a.rel='noopener noreferrer';row.append(a);}docs.append(row);}}
- if(state.tab==='tools'&&f.elements.section?.value==='affichages'){
+ if(state.tab==='tools'&&['affichages','dossiers'].includes(f.elements.section?.value)){
   let links;try{links=parseDownloadLinks(f.elements.downloads?.value||'');}catch(error){message(error.message,'error');return;}
   if(links.length){const heading=mk('h3','','Liens PDF externes');docs.append(heading);for(const link of links){const a=mk('a','btn btn-outline btn-block',link.label+' ↗');a.href=link.url;a.rel='noopener noreferrer';a.target='_blank';docs.append(a);}docs.hidden=false;}
  }dialog.showModal();}
@@ -452,12 +486,13 @@ $('#toolSectionFilter').addEventListener('change',e=>{
  state.toolsFilter=e.target.value;renderList();renderReorder();if(!state.editingId&&!state.dirty)renderForm();
 });
 $('#openReorder').addEventListener('click',startReorder);
+$('#deleteRetiredBareme').addEventListener('click',deleteRetiredBareme);
 $('#cancelReorder').addEventListener('click',()=>{if(!ensureReorderClosed())return;render();});
 $('#saveReorder').addEventListener('click',saveReorder);
 $('#reorderItems').addEventListener('click',e=>{const b=e.target.closest('[data-move]');if(b)moveReorder(b.dataset.id,b.dataset.move);});
 $('#newButton').addEventListener('click',()=>{if(state.busy||!confirmDiscard()||!ensureReorderClosed())return;resetDraft();render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});});
 $('#recordForm').addEventListener('input',e=>{if(e.target.matches('[data-pdf-label]')){const pdf=state.pdfDraft.find(d=>d.id===e.target.dataset.pdfLabel);if(pdf){pdf.label=e.target.value;state.dirty=true;}return;}state.dirty=true;if(e.target.id==='richEditor')saveRange();});
-$('#recordForm').addEventListener('change',async e=>{if(e.target.id==='pdfFileInput'){const files=[...(e.target.files||[])];e.target.value='';for(const file of files){try{await addPdfFile(file);}catch(error){message(error.message,'error');}}return;}if(e.target.id==='pdfLibrarySelect'){return;}if(e.target.id==='field_section')showPdfLinks();if(['coverFile','inlineImageInput','replaceInlineInput'].includes(e.target.id)){const file=e.target.files?.[0];if(e.target.id==='coverFile')selectCover(file);else insertInline(file,e.target.id==='replaceInlineInput');e.target.value='';}else state.dirty=true;});
+$('#recordForm').addEventListener('change',async e=>{if(e.target.id==='pdfFileInput'){const files=[...(e.target.files||[])];e.target.value='';for(const file of files){try{await addPdfFile(file);}catch(error){message(error.message,'error');}}return;}if(e.target.id==='pdfLibrarySelect'){return;}if(e.target.id==='field_section'){showPdfLinks();updateToolFormContext();}if(['coverFile','inlineImageInput','replaceInlineInput'].includes(e.target.id)){const file=e.target.files?.[0];if(e.target.id==='coverFile')selectCover(file);else insertInline(file,e.target.id==='replaceInlineInput');e.target.value='';}else state.dirty=true;});
 $('#recordForm').addEventListener('mousedown',e=>{if(e.target.closest('.rich-tool')){saveRange();e.preventDefault();}});
 $('#recordForm').addEventListener('click',e=>{const removePdf=e.target.closest('[data-remove-pdf]');if(removePdf){state.pdfDraft=state.pdfDraft.filter(d=>d.id!==removePdf.dataset.removePdf);state.dirty=true;renderPdfAttachments();return;}if(e.target.closest('#pdfAddExisting')){addExistingPdf();return;}const cmd=e.target.closest('[data-cmd]');if(cmd){applyFormat(cmd.dataset.cmd);return;}if(e.target.closest('#cancelEdit')){if(!confirmDiscard())return;resetDraft();render();return;}if(e.target.closest('#previewArticle')){previewArticle();return;}if(e.target.closest('#removeCover')){removeCover();return;}
  if(e.target.closest('#insertInlineImage')){saveRange();$('#inlineImageInput').click();return;}if(e.target.closest('#replaceInline')){$('#replaceInlineInput').click();return;}if(e.target.closest('#deleteInline')){deleteInline();return;}
