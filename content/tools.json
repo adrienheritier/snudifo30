@@ -311,9 +311,14 @@
     "title": "Absences et autorisations",
     "summary": "Les régimes de congé et d’autorisation d’absence ne sont pas interchangeables.",
     "tag": "Carrière",
-    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les autorisations d’absence peuvent être de droit ou accordées sous réserve des nécessités de service, selon leur fondement. Les règles spécifiques doivent être vérifiées avec les textes et les instructions applicables.</p><h2>Premières démarches</h2><p>Précisez le motif ; recherchez la base réglementaire ; formulez une demande écrite et conservez la réponse.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO peut étudier les possibilités d’autorisation ou les contestations.</p>",
-    "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/N19978",
-    "order": 8
+    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Enfant malade, événement familial, rendez-vous médical… <br><strong>Les conditions dépendent du motif de l’absence</strong> : certaines autorisations sont de droit, d’autres soumises aux nécessités de service. <br>Le maintien du salaire n’est pas systématique. Présentez votre demande avec les justificatifs nécessaires et, sauf urgence, avant l’absence. <br>En cas de refus ou de retenue sur salaire contestable, faites vérifier votre situation par le syndicat.</p>",
+    "order": 8,
+    "attachments": [
+      {
+        "label": "DSDEN30 - circulaire et annexes autorisations absence",
+        "path": "media/pdfs/f4dfa7ed8af482c0d518fac16ae1bf2d7b5118798b5e9ec4b4a8491922dd6f2a.pdf"
+      }
+    ]
   },
   {
     "id": "r10",
