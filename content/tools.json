@@ -327,11 +327,10 @@
   {
     "id": "r11",
     "section": "fiches",
-    "title": "Formation syndicale et RIS",
-    "summary": "Formation syndicale et réunions d’information : deux cadres différents.",
+    "title": "Formation syndicale",
+    "summary": "Formation syndicale : 12 jours par an sur temps scolaire.",
     "tag": "Syndical",
-    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Le congé pour formation syndicale et les réunions d’information syndicale répondent à des règles spécifiques de demande et de délai. Pour les enseignants, il faut également prendre en compte les contraintes réglementaires propres au premier degré.</p><h2>Premières démarches</h2><p>Consultez la convocation et les indications de l’organisateur ; vérifiez les délais ; adressez votre demande à l’administration selon la procédure prescrite.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO 30 organise des stages et peut vous transmettre les modèles nécessaires.</p>",
-    "url": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie",
+    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Vous pouvez bénéficier de <strong>12 jours ouvrables de congé rémunéré pour formation syndicale par an</strong>, que vous soyez syndiqué ou non. La demande doit être adressée à l’administration <strong>au moins un mois avant</strong> le stage.&nbsp;</p><p>Sans réponse au plus tard 15 jours avant son début, le congé est considéré comme accepté.&nbsp;</p><p>Un refus pour nécessités de service doit être motivé : contactez le syndicat.</p>",
     "order": 1
   },
   {
