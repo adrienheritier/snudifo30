@@ -269,9 +269,14 @@
     "title": "Mouvement interdépartemental",
     "summary": "Campagne 2027 : saisie, vérification du barème, justificatifs et recours.",
     "tag": "Mouvement",
-    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les vœux sont saisis sur SIAM/I-Prof du 4 novembre au 25 novembre 2026 à 12 h (heure de Paris). Les barèmes sont consultables à compter du 13 janvier 2027 ; la période de demande de correction s’achève le 27 janvier 2027.</p><h2>Premières démarches</h2><p>Consultez la circulaire ; vérifiez les pièces justificatives ; contrôlez votre barème pendant la fenêtre prévue.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le syndicat peut vous accompagner pour le contrôle du barème et les démarches de correction.</p>",
-    "url": "https://www.education.gouv.fr/mutation-des-personnels-enseignants-du-premier-degre-5498",
-    "order": 4
+    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Vous souhaitez <strong>changer de département</strong> ? <br>Le mouvement interdépartemental s’adresse aux enseignants titulaires, avec une saisie des vœux sur <strong>SIAM, via I-Prof</strong>. <br>Votre situation professionnelle, familiale ou de handicap peut ouvrir droit à des points ou à des priorités, sous conditions et sur justificatifs. <br>Faites vérifier votre barème et votre dossier <b>avant les échéances</b> : le SNUDI FO vous accompagne dans vos démarches et vos recours.</p>",
+    "order": 4,
+    "attachments": [
+      {
+        "label": "Mouvement inter départemental 2027",
+        "path": "media/pdfs/b8056dd2e01de1a08579cdbc5ced0bfbfd15ee6e0360445457e3e9d21bcb79d4.pdf"
+      }
+    ]
   },
   {
     "id": "r6",
