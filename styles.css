@@ -96,3 +96,37 @@
 .pdf-viewer-note{font-size:.76rem;line-height:1.5;color:var(--muted);margin:0}
 @media(max-width:590px){.mobile-top.pdf-top{gap:8px;padding-inline:10px}.pdf-top .top-logo{width:41px;height:41px}.pdf-top .top-name{min-width:0}.pdf-top .top-name strong{font-size:.87rem}.pdf-top .top-name span,.pdf-top .icon-btn{display:none}.pdf-frame{height:calc(100dvh - 290px);min-height:340px}.pdf-viewer-actions .btn{flex:1 1 155px}.pdf-top-back{padding:9px 7px}}
 @media(max-width:359px){.pdf-top .top-name strong{font-size:.78rem}.pdf-top-back{font-size:.8rem}}
+
+/* V3.10 — lecteur PDF adapté aux applications mobiles installées. */
+.pdf-workspace .mobile-top.pdf-top{z-index:70}
+.pdf-workspace .bottom-nav{display:none}
+.pdf-workspace .main{max-width:980px;margin:0 auto;padding-bottom:22px}
+.pdf-viewer-page{gap:10px}
+.pdf-viewer-heading h1{margin:0 0 4px;font-size:clamp(1.03rem,2.8vw,1.35rem)}
+.pdf-viewer-heading .chip{display:none}
+.pdf-reader{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#e9ebef;min-width:0}
+.pdf-reader-controls{display:flex;align-items:center;justify-content:center;gap:5px;min-height:49px;background:#fff;border-bottom:1px solid var(--line);padding:6px 7px;position:sticky;top:74px;z-index:15}
+.pdf-reader-button{min-width:39px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1px solid #dadde3;border-radius:8px;color:var(--red);font-size:1.16rem;font-weight:800;cursor:pointer}
+.pdf-reader-button:disabled{opacity:.30;cursor:not-allowed}
+.pdf-reader-counter{min-width:90px;text-align:center;font-size:.80rem;font-weight:800;white-space:nowrap}
+.pdf-reader-zoom{min-width:47px;text-align:center;font-size:.73rem;font-weight:800;white-space:nowrap}
+.pdf-reader-divider{height:26px;border-left:1px solid #d5d6db;margin:0 5px}
+.pdf-reader-scroll{height:clamp(330px,calc(100dvh - 252px),900px);overflow:auto;overscroll-behavior:contain;display:flex;align-items:flex-start;justify-content:safe center;padding:11px;background:#e9ebef;position:relative}
+.pdf-reader-canvas{display:block;max-width:none;flex:none;background:#fff;box-shadow:0 5px 25px rgba(0,0,0,.12);margin:0 auto}
+.pdf-reader-canvas[hidden]{display:none}
+.pdf-reader-status{background:#fff;border-radius:9px;padding:14px;max-width:95%;font-size:.88rem;text-align:center;margin:32px auto;color:#555;line-height:1.5}
+.pdf-reader-status[hidden]{display:none}
+.pdf-reader-status.pdf-reader-error{color:#a40c24;border:1px solid #e0a6b0}
+.pdf-viewer-actions .btn{white-space:normal}
+@media(max-width:600px){
+ .pdf-workspace .main{padding:10px 10px 25px}
+ .pdf-workspace .mobile-top.pdf-top{height:60px}
+ .pdf-reader-scroll{height:calc(100dvh - 228px);min-height:240px;padding:7px}
+ .pdf-reader-controls{top:60px;gap:4px;padding-inline:4px}
+ .pdf-reader-button{min-width:34px;height:34px}
+ .pdf-reader-counter{min-width:77px;font-size:.73rem}
+ .pdf-reader-zoom{min-width:44px;font-size:.70rem}
+ .pdf-viewer-actions{flex-direction:column}
+ .pdf-viewer-actions .btn{flex:none;width:100%}
+}
+@media(max-width:350px){.pdf-reader-divider{margin-inline:1px}.pdf-reader-controls{gap:2px}.pdf-reader-counter{min-width:70px}}
