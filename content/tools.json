@@ -7,7 +7,13 @@
     "order": 2,
     "id": "pub-mwiyyvb8-8tykw1",
     "bodyHtml": "",
-    "cover": "./media/outils/mwiyywjq-yz6r6mgarm-couverture.webp"
+    "cover": "./media/outils/mwiyywjq-yz6r6mgarm-couverture.webp",
+    "attachments": [
+      {
+        "label": "Vote FO",
+        "path": "media/pdfs/71e2a2ab1e7ce6d0b37ea4eef457a34bc3d8fd170d54b63ad4204c23ac61429d.pdf"
+      }
+    ]
   },
   {
     "id": "b-inter",
