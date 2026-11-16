@@ -184,7 +184,13 @@
     "url": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie",
     "tag": "",
     "cover": "./media/outils/mwi1ozmo-5tosnyr18u-couverture.webp",
-    "order": 0
+    "order": 0,
+    "attachments": [
+      {
+        "label": "Planning Formations 26 27",
+        "path": "media/pdfs/6a15665c39db4ba743b7e705438558f7aee1b9c44a0d1e5af738a707cc8bbe57.pdf"
+      }
+    ]
   },
   {
     "id": "d5",
