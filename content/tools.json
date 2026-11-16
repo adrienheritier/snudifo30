@@ -231,7 +231,8 @@
         "path": "media/pdfs/f1566294c15498660735dea08033dcacd91062d01e620a4dc4abad172c582d5d.pdf"
       }
     ],
-    "cover": "./media/outils/mwj6mimu-pa8mtufyho-couverture.webp"
+    "cover": "./media/outils/mwj6mimu-pa8mtufyho-couverture.webp",
+    "order": 0
   },
   {
     "id": "r2",
@@ -240,7 +241,8 @@
     "summary": "Dans le premier degré, une déclaration individuelle préalable peut être obligatoire.",
     "tag": "PE",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Pour les enseignants exerçant des fonctions d’enseignement en école maternelle ou élémentaire publique, la déclaration d’intention est en principe à effectuer au moins 48 h avant la grève, délai comprenant au moins un jour ouvré, dans le cadre prévu par la réglementation. Cette règle ne s’applique pas indistinctement à tous les personnels.</p><h2>Premières démarches</h2><p>Vérifiez le préavis et votre situation ; consultez les modalités de déclaration ; contactez le syndicat avant une échéance courte.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO peut préciser vos droits, les préavis en cours et les modalités départementales.</p>",
-    "url": "https://www.education.gouv.fr/node/288005"
+    "url": "https://www.education.gouv.fr/node/288005",
+    "order": 2
   },
   {
     "id": "r3",
@@ -249,7 +251,8 @@
     "summary": "Les règles diffèrent selon le motif, le statut et l’organisation du service.",
     "tag": "Carrière",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Un temps partiel peut être de droit dans certaines situations ou soumis à autorisation dans d’autres. Les modalités pour les professeurs des écoles doivent aussi tenir compte de l’organisation du service et des circulaires applicables à la campagne.</p><h2>Premières démarches</h2><p>Identifiez le type de temps partiel demandé ; vérifiez la campagne départementale ; conservez une copie de votre demande et de la réponse.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO peut aider à analyser un refus ou les conditions proposées.</p>",
-    "url": "https://www.service-public.fr/particuliers/vosdroits/F486"
+    "url": "https://www.service-public.fr/particuliers/vosdroits/F486",
+    "order": 3
   },
   {
     "id": "r4",
@@ -258,7 +261,8 @@
     "summary": "Guide officiel sur le contrat, le temps de travail, les missions et la rémunération.",
     "tag": "AESH",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les AESH sont des agents contractuels de droit public. Les conditions d’emploi et les missions sont encadrées par des textes et un guide national ; chaque situation dépend également des dispositions contractuelles applicables.</p><h2>Premières démarches</h2><p>Relisez votre contrat, sa quotité et votre emploi du temps ; gardez les éventuelles demandes de modification par écrit.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO revendique un statut et un vrai salaire pour les AESH et accompagne les collègues dans leurs difficultés.</p>",
-    "url": "https://www.education.gouv.fr/etre-accompagnant-des-eleves-en-situation-de-handicap-aesh-12188"
+    "url": "https://www.education.gouv.fr/etre-accompagnant-des-eleves-en-situation-de-handicap-aesh-12188",
+    "order": 4
   },
   {
     "id": "r5",
@@ -267,7 +271,8 @@
     "summary": "Campagne 2027 : saisie, vérification du barème, justificatifs et recours.",
     "tag": "Mouvement",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les vœux sont saisis sur SIAM/I-Prof du 4 novembre au 25 novembre 2026 à 12 h (heure de Paris). Les barèmes sont consultables à compter du 13 janvier 2027 ; la période de demande de correction s’achève le 27 janvier 2027.</p><h2>Premières démarches</h2><p>Consultez la circulaire ; vérifiez les pièces justificatives ; contrôlez votre barème pendant la fenêtre prévue.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le syndicat peut vous accompagner pour le contrôle du barème et les démarches de correction.</p>",
-    "url": "https://www.education.gouv.fr/mutation-des-personnels-enseignants-du-premier-degre-5498"
+    "url": "https://www.education.gouv.fr/mutation-des-personnels-enseignants-du-premier-degre-5498",
+    "order": 5
   },
   {
     "id": "r6",
@@ -276,7 +281,8 @@
     "summary": "Affectation dans le Gard : règles annuelles, barème et calendrier local.",
     "tag": "Mouvement",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les règles, les bonifications et les dates sont définies dans la documentation départementale de la campagne concernée. Il ne faut pas transposer automatiquement le barème interdépartemental au mouvement intra.</p><h2>Premières démarches</h2><p>Obtenez la note départementale de l’année ; vérifiez vos bonifications ; sollicitez un contrôle de votre dossier.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO du Gard accompagne les collègues dans leurs vœux et le contrôle du barème.</p>",
-    "url": "https://snudi30.force-ouvriere.org/"
+    "url": "https://snudi30.force-ouvriere.org/",
+    "order": 6
   },
   {
     "id": "r7",
@@ -285,7 +291,8 @@
     "summary": "Dispositif de protection de l’agent public dans les conditions prévues par les textes.",
     "tag": "Santé",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Lorsqu’un agent est victime, notamment dans l’exercice de ses fonctions, de certaines attaques ou poursuites, la protection fonctionnelle peut s’appliquer selon les circonstances. Son octroi et ses modalités demandent une analyse individuelle.</p><h2>Premières démarches</h2><p>Conservez les éléments factuels ; signalez rapidement les faits ; demandez conseil avant d’engager une procédure.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le syndicat peut aider à préparer un signalement ou une demande et à suivre la réponse de l’administration.</p>",
-    "url": "https://www.service-public.fr/particuliers/vosdroits/F32574"
+    "url": "https://www.service-public.fr/particuliers/vosdroits/F32574",
+    "order": 7
   },
   {
     "id": "r8",
@@ -294,7 +301,8 @@
     "summary": "CMO, CLM, CLD, CITIS : des dispositifs distincts.",
     "tag": "Santé",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les conditions d’ouverture, les pièces nécessaires, les durées et les effets sur la rémunération dépendent du type de congé et du statut. Le CITIS répond à un régime spécifique ; il ne se substitue pas automatiquement à un congé de maladie.</p><h2>Premières démarches</h2><p>Identifiez précisément le régime concerné ; respectez les délais de transmission ; conservez vos justificatifs et sollicitations.</p><h2>Accompagnement du SNUDI-FO</h2><p>En cas de difficulté, contactez le syndicat avant d’envoyer des documents médicaux sensibles.</p>",
-    "url": "https://www.service-public.fr/particuliers/vosdroits/N512"
+    "url": "https://www.service-public.fr/particuliers/vosdroits/N512",
+    "order": 8
   },
   {
     "id": "r9",
@@ -303,7 +311,8 @@
     "summary": "Les régimes de congé et d’autorisation d’absence ne sont pas interchangeables.",
     "tag": "Carrière",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les autorisations d’absence peuvent être de droit ou accordées sous réserve des nécessités de service, selon leur fondement. Les règles spécifiques doivent être vérifiées avec les textes et les instructions applicables.</p><h2>Premières démarches</h2><p>Précisez le motif ; recherchez la base réglementaire ; formulez une demande écrite et conservez la réponse.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO peut étudier les possibilités d’autorisation ou les contestations.</p>",
-    "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/N19978"
+    "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/N19978",
+    "order": 9
   },
   {
     "id": "r10",
@@ -312,7 +321,8 @@
     "summary": "Calendrier, appréciation et voies de contestation selon la situation.",
     "tag": "Carrière",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Le dispositif comporte des étapes et des délais réglementaires. Il faut consulter les règles de la campagne et les notifications individuelles pour apprécier les possibilités de recours.</p><h2>Premières démarches</h2><p>Conservez les documents transmis ; relevez les dates de notification ; contactez le syndicat rapidement si vous envisagez un recours.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO peut vous accompagner dans l’analyse de l’appréciation et des voies de recours.</p>",
-    "url": "https://www.education.gouv.fr/metiers-de-l-enseignement-et-de-l-education-89624"
+    "url": "https://www.education.gouv.fr/metiers-de-l-enseignement-et-de-l-education-89624",
+    "order": 10
   },
   {
     "id": "r11",
@@ -321,7 +331,8 @@
     "summary": "Formation syndicale et réunions d’information : deux cadres différents.",
     "tag": "Syndical",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Le congé pour formation syndicale et les réunions d’information syndicale répondent à des règles spécifiques de demande et de délai. Pour les enseignants, il faut également prendre en compte les contraintes réglementaires propres au premier degré.</p><h2>Premières démarches</h2><p>Consultez la convocation et les indications de l’organisateur ; vérifiez les délais ; adressez votre demande à l’administration selon la procédure prescrite.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO 30 organise des stages et peut vous transmettre les modèles nécessaires.</p>",
-    "url": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie"
+    "url": "https://snudi30.force-ouvriere.org/calendrier-2026-2027-1ere-partie",
+    "order": 1
   },
   {
     "id": "r12",
@@ -330,7 +341,8 @@
     "summary": "Suivi des décisions, conséquences pour l’équipe et possibilités de mobilisation.",
     "tag": "Carte scolaire",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les propositions et décisions de carte scolaire s’inscrivent dans un calendrier d’instances et de consultations. Les conséquences d’une mesure sur les personnels dépendent notamment de leur situation et des règles du mouvement.</p><h2>Premières démarches</h2><p>Rassemblez les effectifs et prévisions ; transmettez la situation au syndicat ; demandez un point sur les conséquences individuelles.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO du Gard suit les mesures de carte scolaire et défend le maintien des postes.</p>",
-    "url": "https://snudi30.force-ouvriere.org/-carte-scolaire-departementale-"
+    "url": "https://snudi30.force-ouvriere.org/-carte-scolaire-departementale-",
+    "order": 11
   },
   {
     "id": "d3",
