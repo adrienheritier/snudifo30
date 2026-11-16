@@ -302,8 +302,7 @@
     "title": "Arrêts et congés pour raison de santé",
     "summary": "CMO, CLM, CLD, CITIS : des dispositifs distincts.",
     "tag": "Santé",
-    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les conditions d’ouverture, les pièces nécessaires, les durées et les effets sur la rémunération dépendent du type de congé et du statut. Le CITIS répond à un régime spécifique ; il ne se substitue pas automatiquement à un congé de maladie.</p><h2>Premières démarches</h2><p>Identifiez précisément le régime concerné ; respectez les délais de transmission ; conservez vos justificatifs et sollicitations.</p><h2>Accompagnement du SNUDI-FO</h2><p>En cas de difficulté, contactez le syndicat avant d’envoyer des documents médicaux sensibles.</p>",
-    "url": "https://www.service-public.fr/particuliers/vosdroits/N512",
+    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Prévenez rapidement votre service et transmettez votre arrêt <strong>dans les 48 h</strong>. Pour un fonctionnaire, le congé de maladie ordinaire est rémunéré à <strong>90 % du traitement indiciaire pendant 3 mois, puis à 50 % pendant 9 mois</strong>, selon les droits déjà utilisés, avec un jour de carence sauf exception. <br>Les règles diffèrent pour les contractuels. <br>Si l’arrêt se prolonge ou si la maladie est liée au travail, contactez le syndicat pour examiner les dispositifs adaptés.</p>",
     "order": 7
   },
   {
