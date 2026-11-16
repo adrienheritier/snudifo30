@@ -176,15 +176,6 @@
     "url": "https://snudi30.force-ouvriere.org/-carte-scolaire-departementale-"
   },
   {
-    "id": "d1",
-    "section": "documents",
-    "title": "Site officiel du SNUDI-FO du Gard",
-    "summary": "Ressource de référence à consulter.",
-    "bodyHtml": "<p>Ouvrez la ressource pour consulter la version publiée par son éditeur.</p>",
-    "url": "https://snudi30.force-ouvriere.org/",
-    "order": 3
-  },
-  {
     "id": "d3",
     "section": "affichages",
     "title": "Calendrier des formations 2026-2027",
