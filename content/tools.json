@@ -250,8 +250,7 @@
     "title": "Temps partiel",
     "summary": "Les règles diffèrent selon le motif, le statut et l’organisation du service.",
     "tag": "Carrière",
-    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Un temps partiel peut être de droit dans certaines situations ou soumis à autorisation dans d’autres. Les modalités pour les professeurs des écoles doivent aussi tenir compte de l’organisation du service et des circulaires applicables à la campagne.</p><h2>Premières démarches</h2><p>Identifiez le type de temps partiel demandé ; vérifiez la campagne départementale ; conservez une copie de votre demande et de la réponse.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO peut aider à analyser un refus ou les conditions proposées.</p>",
-    "url": "https://www.service-public.fr/particuliers/vosdroits/F486",
+    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Le temps partiel peut être <strong>de droit</strong>, notamment dans certaines situations familiales ou de handicap, ou <strong>soumis à autorisation</strong>, selon les nécessités de service. <br>Pour les enseignants, son organisation dépend du rythme scolaire et de la quotité accordée. <br>Respectez le calendrier de demande et vérifiez les conséquences sur votre rémunération et votre retraite. <br>Le syndicat peut vous accompagner, notamment en cas de refus.</p>",
     "order": 3
   },
   {
