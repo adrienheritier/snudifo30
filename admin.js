@@ -3,9 +3,12 @@
  */
 'use strict';
 const $ = selector => document.querySelector(selector);
-const state = {token:'',owner:'',repo:'',branch:'main',tab:'news',toolsFilter:'all',records:{news:[],events:[],tools:[]},sha:{news:'',events:'',tools:''},editingId:null,busy:false,dirty:false,coverDraft:null,coverRemoved:false,pendingMedia:new Map(),editorRange:null,selectedImage:null,orderMode:false,orderSection:null,orderDraft:[],orderDirty:false,view:'records',home:{banner:'',alt:''},homeSha:'',homeDraft:null,homeRemoved:false,homeDirty:false,homeAlt:''};
+const state = {token:'',owner:'',repo:'',branch:'main',tab:'news',toolsFilter:'all',records:{news:[],events:[],tools:[]},sha:{news:'',events:'',tools:''},editingId:null,busy:false,dirty:false,coverDraft:null,coverRemoved:false,pendingMedia:new Map(),editorRange:null,selectedImage:null,orderMode:false,orderSection:null,orderDraft:[],orderDirty:false,view:'records',home:{banner:'',alt:''},homeSha:'',homeDraft:null,homeRemoved:false,homeDirty:false,homeAlt:'',pdfDraft:[],pdfLibrary:[],pdfLibraryError:'',pdfUploadPaths:new Set()};
 const PATHS = {news:'content/news.json',events:'content/events.json',tools:'content/tools.json'};
 const HOME_PATH='content/home.json';
+const PDF_FOLDER='media/pdfs';
+const PDF_MAX_BYTES=10*1024*1024;
+const PDF_MAX_PER_PUBLICATION=20;
 const FIELDS = {
  news:[
   {key:'date',label:'Date de publication',type:'date',required:true},
@@ -66,7 +69,19 @@ async function readHomeRemote(){const {response,result}=await api(HOME_PATH);if(
  let record;try{record=JSON.parse(decode64(result.content));}catch{throw Error('Le fichier du bandeau n’est pas un JSON valide.');}
  if(!record||typeof record!=='object'||typeof record.banner!=='string'||typeof record.alt!=='string')throw Error('Configuration de l’accueil invalide.');return {record,sha:result.sha};}
 function resetHomeDraft(){if(state.homeDraft?.url)URL.revokeObjectURL(state.homeDraft.url);state.homeDraft=null;state.homeRemoved=false;state.homeDirty=false;state.homeAlt=state.home.alt||'';}
-async function reloadAll(){setBusy(true);try{const [n,e,t,h]=await Promise.all([readRemote('news'),readRemote('events'),readRemote('tools'),readHomeRemote()]);state.records.news=n.records;state.records.events=e.records;state.records.tools=t.records;state.sha.news=n.sha;state.sha.events=e.sha;state.sha.tools=t.sha;state.home=h.record;state.homeSha=h.sha;resetDraft();resetOrder();resetHomeDraft();render();message('Contenus chargés depuis GitHub.','ok');}catch(error){message(error.message,'error');throw error;}finally{setBusy(false);}}
+async function reloadAll(){setBusy(true);try{
+ const [n,e,t,h]=await Promise.all([readRemote('news'),readRemote('events'),readRemote('tools'),readHomeRemote()]);
+ state.records.news=n.records;state.records.events=e.records;state.records.tools=t.records;state.sha.news=n.sha;state.sha.events=e.sha;state.sha.tools=t.sha;state.home=h.record;state.homeSha=h.sha;
+ try{state.pdfLibrary=await listRemotePdfs();state.pdfLibraryError='';}catch(error){state.pdfLibrary=[];state.pdfLibraryError=error.message;}
+ resetDraft();resetOrder();resetHomeDraft();render();message(state.pdfLibraryError?'Contenus chargés. Bibliothèque PDF temporairement indisponible : '+state.pdfLibraryError:'Contenus et bibliothèque PDF chargés depuis GitHub.',state.pdfLibraryError?'':'ok');
+ }catch(error){message(error.message,'error');throw error;}finally{setBusy(false);}}
+async function listRemotePdfs(){
+ const {response,result}=await api(PDF_FOLDER);
+ if(response.status===404)return [];
+ if(!response.ok||!Array.isArray(result))throw Error(`Liste des PDF impossible (HTTP ${response.status}).`);
+ if(result.length>=1000)throw Error('Le dossier PDF atteint la limite de lecture de cette API (1 000 fichiers).');
+ return result.filter(f=>f.type==='file'&&SnudiPdf.normalize(f.path)).map(f=>({path:SnudiPdf.normalize(f.path),size:f.size||0,sha:f.sha||''})).sort((a,b)=>a.path.localeCompare(b.path));
+}
 async function connect(event){event.preventDefault();if(state.busy)return;const f=new FormData(event.currentTarget);
  try{state.owner=String(f.get('owner')||'').trim();state.repo=String(f.get('repo')||'').trim();state.branch=String(f.get('branch')||'main').trim();state.token=String(f.get('token')||'').trim();validatePath(state.owner,'Propriétaire');validatePath(state.repo,'Dépôt');if(!state.branch||state.branch.includes('..'))throw Error('Branche invalide.');if(!state.token)throw Error('Jeton GitHub manquant.');await reloadAll();$('#token').value='';$('#repositoryTitle').textContent=repoInfo();$('#repositorySubtitle').textContent='Actualités, calendrier, outils et bandeau d’accueil publiés sur GitHub.';$('#connection').hidden=true;$('#workspace').hidden=false;}catch(error){state.token='';$('#token').value='';message(error.message,'error');}}
 function mk(tag,cls='',txt=''){const el=document.createElement(tag);if(cls)el.className=cls;if(txt)el.textContent=txt;return el;}
@@ -76,7 +91,7 @@ function field(f,value){const wrap=mk('div','form-control');const label=mk('labe
  else {input=mk('input','input');input.type=f.type==='url'?'text':f.type;input.placeholder=f.placeholder||'';input.value=value||'';if(f.type==='url'){input.inputMode='url';input.autocomplete='off';input.spellcheck=false;input.autocapitalize='none';}}
  input.id='field_'+f.key;input.name=f.key;input.required=Boolean(f.required);wrap.append(input);if(f.type==='url'&&!f.required)wrap.append(mk('p','field-hint','Facultatif : laisse ce champ vide si tu n’as pas de lien à ajouter.'));return wrap;}
 function usedPaths(record){const results=new Set();if(!record||typeof record!=='object')return results;const cover=SnudiArticle.asPath(record.cover||'');if(cover)results.add(cover);SnudiArticle.imagePaths(record.bodyHtml||'').forEach(p=>results.add(p));return results;}
-function resetDraft(){for(const url of state.pendingMedia.keys())URL.revokeObjectURL(url);state.pendingMedia.clear();if(state.coverDraft){URL.revokeObjectURL(state.coverDraft.url);state.coverDraft=null;}state.coverRemoved=false;state.editorRange=null;state.selectedImage=null;state.dirty=false;state.editingId=null;}
+function resetDraft(){state.pdfDraft=[];for(const url of state.pendingMedia.keys())URL.revokeObjectURL(url);state.pendingMedia.clear();if(state.coverDraft){URL.revokeObjectURL(state.coverDraft.url);state.coverDraft=null;}state.coverRemoved=false;state.editorRange=null;state.selectedImage=null;state.dirty=false;state.editingId=null;}
 function confirmDiscard(){return !state.dirty||confirm('Les modifications de ce formulaire ne sont pas publiées. Les abandonner ?');}
 function renderList(){
  const list=$('#recordList');list.replaceChildren();
@@ -102,14 +117,125 @@ function richEditorArea(rec){const wrap=mk('section','rich-section');const label
  const imageTools=mk('div','selected-image-tools');imageTools.id='selectedImageTools';imageTools.hidden=true;imageTools.append(mk('span','field-hint','Image sélectionnée :'));
  const replace=mk('button','btn btn-outline btn-sm','Remplacer');replace.type='button';replace.id='replaceInline';const del=mk('button','btn btn-neutral btn-sm','Supprimer');del.type='button';del.id='deleteInline';imageTools.append(replace,del);wrap.append(imageTools);wrap.append(mk('p','field-hint','Astuce : clique sur une image dans l’article pour la remplacer ou la supprimer. Les images sont compressées automatiquement avant publication.'));
  return wrap;}
+/* PDF partagés : bibliothèque commune aux actualités, événements et outils. */
+function pdfName(path){
+ for(const section of ['news','events','tools'])for(const r of state.records[section]){
+  const match=SnudiPdf.attachments(r).find(a=>a.path===path);
+  if(match)return match.label;
+ }
+ return 'PDF '+path.slice(-16,-4);
+}
+function pdfAttachmentsArea(){
+ const box=mk('section','pdf-admin');box.id='pdfAttachmentsArea';
+ box.append(mk('div','media-control-title','Documents PDF joints à cette publication (facultatif)'));
+ box.append(mk('p','field-hint','Jusqu’à 20 documents par publication, 10 Mo par fichier. Un même PDF hébergé sur GitHub peut servir dans plusieurs publications, sans copie supplémentaire.'));
+ const list=mk('div','pdf-admin-list');list.id='pdfAdminList';box.append(list);
+ const row=mk('div','pdf-actions');
+ const upload=mk('label','form-control','Importer un nouveau PDF');const file=mk('input','input');file.type='file';file.accept='.pdf,application/pdf';file.multiple=true;file.id='pdfFileInput';upload.append(file);row.append(upload);
+ const selectWrap=mk('label','form-control','Réutiliser un PDF déjà publié');const select=mk('select','input');select.id='pdfLibrarySelect';selectWrap.append(select);row.append(selectWrap);
+ const add=mk('button','btn btn-outline btn-sm','+ Associer ce PDF');add.id='pdfAddExisting';add.type='button';row.append(add);box.append(row);
+ const status=mk('p','field-hint');status.id='pdfLibraryHint';box.append(status);return box;
+}
+function renderPdfAttachments(){
+ const area=$('#pdfAttachmentsArea');if(!area)return;
+ const list=$('#pdfAdminList');list.replaceChildren();
+ if(!state.pdfDraft.length)list.append(mk('p','muted','Aucun PDF associé à cette publication.'));
+ for(const item of state.pdfDraft){
+  const row=mk('div','pdf-attachment-item');const field=mk('label','form-control','Titre visible par les collègues');
+  const input=mk('input','input');input.type='text';input.maxLength=120;input.required=true;input.dataset.pdfLabel=item.id;input.value=item.label;field.append(input);row.append(field);
+  const remove=mk('button','btn btn-neutral btn-sm','Retirer');remove.type='button';remove.dataset.removePdf=item.id;row.append(remove);
+  const details=mk('div','pdf-attachment-meta',item.file?`À envoyer sur GitHub • ${(item.file.size/1024/1024).toFixed(2)} Mo`:'Déjà sur GitHub • '+(item.path?item.path.slice(-16,-4):''));
+  row.append(details);list.append(row);
+ }
+ const select=$('#pdfLibrarySelect'),prior=select.value;select.replaceChildren();
+ const option=mk('option','','— Choisir un document hébergé —');option.value='';select.append(option);
+ for(const item of state.pdfLibrary){const opt=mk('option','',pdfName(item.path)+' · '+(item.size/1024/1024).toFixed(2)+' Mo');opt.value=item.path;select.append(opt);}
+ if([...select.options].some(o=>o.value===prior))select.value=prior;
+ $('#pdfAddExisting').disabled=!state.pdfLibrary.length;
+ $('#pdfLibraryHint').textContent=state.pdfLibraryError?'La liste des PDF n’a pas pu être chargée : '+state.pdfLibraryError:state.pdfLibrary.length?state.pdfLibrary.length+' PDF hébergé(s) dans le dépôt. La sélection n’augmente pas l’espace utilisé.':'Aucun PDF hébergé pour le moment. Importe le premier document pour créer la bibliothèque.';
+}
+async function addPdfFile(file){
+ if(!file)return;
+ if(state.pdfDraft.length>=PDF_MAX_PER_PUBLICATION)throw Error('Maximum 20 PDF par publication.');
+ if(file.size<6||file.size>PDF_MAX_BYTES)throw Error('« '+file.name+' » : le PDF doit peser au maximum 10 Mo.');
+ if(!/\.pdf$/i.test(file.name))throw Error('Le fichier doit porter l’extension .pdf.');
+ const header=String.fromCharCode(...new Uint8Array(await file.slice(0,5).arrayBuffer()));
+ if(header!=='%PDF-')throw Error('Le fichier « '+file.name+' » ne contient pas un en-tête PDF valide.');
+ const label=file.name.replace(/\.pdf$/i,'').replace(/[_-]+/g,' ').slice(0,120).trim()||'Document PDF';
+ state.pdfDraft.push({id:photoId(),label,file,path:''});state.dirty=true;renderPdfAttachments();
+ message('PDF ajouté au formulaire. Il sera envoyé sur GitHub au moment de la publication.','ok');
+}
+function addExistingPdf(){
+ const path=SnudiPdf.normalize($('#pdfLibrarySelect')?.value||'');if(!path){message('Choisis un PDF dans la bibliothèque.','error');return;}
+ if(state.pdfDraft.length>=PDF_MAX_PER_PUBLICATION){message('Maximum 20 PDF par publication.','error');return;}
+ if(state.pdfDraft.some(d=>d.path===path)){message('Ce PDF figure déjà dans la publication.','error');return;}
+ state.pdfDraft.push({id:photoId(),path,label:pdfName(path),file:null});state.dirty=true;renderPdfAttachments();
+ message('Le PDF existant est associé à cette publication sans nouvelle copie.','ok');
+}
+async function uploadPendingPdfs(record){
+ const entries=[];const seen=new Set();
+ for(const entry of state.pdfDraft){
+  let path=SnudiPdf.normalize(entry.path);
+  if(entry.file){
+   if(!window.crypto?.subtle)throw Error('Le navigateur ne permet pas le calcul sécurisé de l’empreinte PDF. Utilise HTTPS sur GitHub Pages.');
+   const bytes=await entry.file.arrayBuffer();
+   if(bytes.byteLength>PDF_MAX_BYTES)throw Error('Un PDF dépasse 10 Mo.');
+   const hash=await crypto.subtle.digest('SHA-256',bytes);
+   const digest=Array.from(new Uint8Array(hash),b=>b.toString(16).padStart(2,'0')).join('');
+   path=PDF_FOLDER+'/'+digest+'.pdf';
+   const existing=await api(path);
+   if(existing.response.status===404){
+    const content=await base64Blob(new Blob([bytes],{type:'application/pdf'}));
+    const result=await api(path,'PUT',{message:'SNUDI FO 30 : import PDF partagé '+digest.slice(0,12),branch:state.branch,content});
+    if(!result.response.ok){
+     const after=await api(path);
+     if(!after.response.ok)throw Error('Impossible d’importer le PDF ('+result.response.status+') : '+(result.result.message||'vérifie les droits GitHub'));
+    }else state.pdfUploadPaths.add(path);
+   }else if(!existing.response.ok)throw Error('Lecture du PDF sur GitHub impossible : HTTP '+existing.response.status);
+   entry.path=path;
+   if(!state.pdfLibrary.some(x=>x.path===path))state.pdfLibrary.push({path,size:entry.file.size});
+  }
+  if(!path)throw Error('Un PDF associé à la publication est introuvable.');
+  if(!entry.file){const available=await api(path);if(available.response.status===404)throw Error('Le PDF « '+entry.label+' » n’existe plus sur GitHub. Retire ce lien puis réimporte le fichier.');if(!available.response.ok)throw Error('Impossible de vérifier le PDF « '+entry.label+' » sur GitHub.');}
+  if(seen.has(path))throw Error('Le même PDF est présent deux fois dans cette publication. Retire l’un des doublons.');
+  seen.add(path);entries.push({label:String(entry.label).trim().slice(0,120),path});
+ }
+ if(entries.length)record.attachments=entries;else delete record.attachments;
+ return record;
+}
+/* Nettoyage prudent : on consulte les TROIS fichiers de publications après l’enregistrement.
+   Une erreur de lecture bloque la suppression, jamais la publication.
+   Les commits GitHub par fichier ne sont pas transactionnels : les modifications réellement simultanées
+   doivent être évitées et restent un cas à sécuriser par une authentification/édition centralisée. */
+async function cleanUnreferencedPdfs(candidatePaths){
+ const paths=[...new Set(candidatePaths.map(SnudiPdf.normalize).filter(Boolean))];
+ if(!paths.length)return {deleted:0,errors:[],retained:0};
+ let remote;
+ try{const all=await Promise.all(['news','events','tools'].map(readRemote));remote={news:all[0].records,events:all[1].records,tools:all[2].records};}
+ catch(error){return {deleted:0,retained:paths.length,errors:['Nettoyage PDF suspendu : une catégorie est inaccessible ('+error.message+').']};}
+ const used=SnudiPdf.references(remote),errors=[];let deleted=0,retained=0;
+ for(const path of paths){
+  if(used.has(path)){retained++;continue;}
+  try{
+   const fresh=await api(path);
+   if(fresh.response.status===404)continue;
+   if(!fresh.response.ok||!fresh.result.sha)throw Error('Fichier PDF inaccessible');
+   const removed=await api(path,'DELETE',{message:'SNUDI FO 30 : retrait PDF sans aucune publication',branch:state.branch,sha:fresh.result.sha});
+   if(!removed.response.ok)throw Error('Erreur GitHub HTTP '+removed.response.status);
+   state.pdfLibrary=state.pdfLibrary.filter(f=>f.path!==path);state.pdfUploadPaths.delete(path);deleted++;
+  }catch(error){errors.push('PDF '+path.slice(-16,-4)+' : '+error.message);}
+ }
+ return {deleted,errors,retained};
+}
 function pdfLinksArea(rec){const wrap=mk('section','pdf-link-editor');wrap.id='pdfLinksArea';const title=mk('label','media-control-title','Liens PDF externes (facultatif)');title.htmlFor='field_downloads';wrap.append(title);wrap.append(mk('p','field-hint','Un document par ligne : Nom du fichier | https://adresse-du-pdf. Tu peux aussi insérer des liens directement dans le texte enrichi. Les PDF ne seront pas téléchargés sur GitHub.'));const textarea=mk('textarea','input');textarea.id='field_downloads';textarea.name='downloads';textarea.rows=4;textarea.placeholder='Affiche syndicale | https://exemple.fr/affiche.pdf\nPanneau syndical | https://exemple.fr/panneau.pdf';textarea.value=Array.isArray(rec.downloads)?rec.downloads.map(d=>`${d.label} | ${d.url}`).join('\n'):'';wrap.append(textarea);return wrap;}
 function showPdfLinks(){const section=$('#field_section')?.value;const box=$('#pdfLinksArea');if(box)box.hidden=section!=='affichages';const help=$('#pdfLinksHelp');if(help)help.hidden=section!=='affichages';}
 function renderForm(){const form=$('#recordForm');form.replaceChildren();const rec=state.records[state.tab].find(r=>r.id===state.editingId)||{};$('#editorTitle').textContent=(state.editingId?'Modifier ':'Nouvelle ')+(state.tab==='news'?'actualité':state.tab==='events'?'entrée du calendrier':'fiche / ressource des outils');$('#editingBadge').hidden=!state.editingId;
  for(const f of FIELDS[state.tab]){if((state.tab==='news'||state.tab==='tools')&&f.key==='url'){form.append(coverArea(rec),richEditorArea(rec));}const initial=rec[f.key]||(!state.editingId&&f.key==='date'?today():(!state.editingId&&f.key==='tag'&&state.tab==='news'?'Actualité':(!state.editingId&&f.key==='section'?(state.toolsFilter!=='all'?state.toolsFilter:'affichages'):'')));form.append(field(f,initial));}
- if(state.tab==='tools'){form.append(pdfLinksArea(rec));const help=mk('p','field-hint','Affichages écoles : ajoute une couverture ou des images dans le texte, puis des liens vers les PDF externes. Tu peux publier plusieurs liens pour un même article.');help.id='pdfLinksHelp';form.append(help);showPdfLinks();}
- const actions=mk('div','form-actions');if(state.tab!=='events'){const preview=mk('button','btn btn-outline',state.tab==='tools'?'Prévisualiser la fiche':'Prévisualiser l’article');preview.type='button';preview.id='previewArticle';actions.append(preview);}const save=mk('button','btn btn-primary',state.editingId?'Publier les modifications':'Publier sur GitHub');save.type='submit';const reset=mk('button','btn btn-neutral','Annuler');reset.type='button';reset.id='cancelEdit';actions.append(save,reset);form.append(actions);
+ if(state.tab==='tools'){form.append(pdfLinksArea(rec));const help=mk('p','field-hint','Affichages écoles : tu peux conserver les liens PDF externes existants ou utiliser la bibliothèque de PDF hébergée sur GitHub.');help.id='pdfLinksHelp';form.append(help);showPdfLinks();}
+ form.append(pdfAttachmentsArea());
+ const actions=mk('div','form-actions');{const preview=mk('button','btn btn-outline',state.tab==='tools'?'Prévisualiser la fiche':state.tab==='events'?'Prévisualiser les PDF':'Prévisualiser l’article');preview.type='button';preview.id='previewArticle';actions.append(preview);}const save=mk('button','btn btn-primary',state.editingId?'Publier les modifications':'Publier sur GitHub');save.type='submit';const reset=mk('button','btn btn-neutral','Annuler');reset.type='button';reset.id='cancelEdit';actions.append(save,reset);form.append(actions);
  const help=mk('p','field-hint',state.tab==='news'?'Les photos sont enregistrées dans le dépôt avec le jeton GitHub actuel. Une publication peut nécessiter plusieurs commits (images puis article).':state.tab==='events'?'Les catégories correspondent aux filtres de l’agenda public.':'Les quatre rubriques publiques sont : Affichages écoles, Fiches pratiques, Modèles de courriers et Barème mouvement. Les contenus de « Archives (non publiées) » sont conservés, sans apparaître dans l’application publique. Les images sont publiées dans media/outils/.');form.append(help);
- if(state.tab!=='events'){refreshCover(rec);updateSelectedImage(null);}}
+ if(state.tab!=='events'){refreshCover(rec);updateSelectedImage(null);}renderPdfAttachments();}
 function refreshCover(rec={}){const img=$('#coverPreview');if(!img)return;const src=state.coverDraft?.url||(!state.coverRemoved?SnudiArticle.asPath(rec.cover||''):'');img.hidden=!src;if(src)img.src=src;else img.removeAttribute('src');$('#coverStatus').textContent=state.coverDraft?'Nouvelle image sélectionnée et compressée.':src?'Image actuellement publiée.':'Aucune couverture sélectionnée.';$('#removeCover').disabled=!src;}
 function updateSelectedImage(node){if(state.selectedImage&&state.selectedImage.isConnected)state.selectedImage.classList.remove('image-selected');const ed=$('#richEditor');state.selectedImage=(node&&ed?.contains(node)&&node.tagName==='IMG')?node:null;if(state.selectedImage)state.selectedImage.classList.add('image-selected');const tools=$('#selectedImageTools');if(tools)tools.hidden=!state.selectedImage;}
 function renderReorder(){
@@ -171,7 +297,7 @@ function render(){for(const tab of ['news','events','tools','home']){const butto
 function confirmHomeDiscard(){return !state.homeDirty||confirm('Le nouveau bandeau n’a pas été publié. Abandonner les modifications ?');}
 function chooseTab(tab){if(state.busy||!['news','events','tools'].includes(tab))return;if(state.view==='home'){if(!confirmHomeDiscard())return;resetHomeDraft();}else if(tab!==state.tab&&(!confirmDiscard()||!ensureReorderClosed()))return;state.view='records';if(tab!==state.tab)resetDraft();state.tab=tab;render();}
 function chooseHomeTab(){if(state.busy||state.view==='home')return;if(!confirmDiscard()||!ensureReorderClosed())return;resetDraft();state.view='home';render();}
-function startEdit(id){if(state.busy||!confirmDiscard()||!ensureReorderClosed())return;resetDraft();state.editingId=id;render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});}
+function startEdit(id){if(state.busy||!confirmDiscard()||!ensureReorderClosed())return;resetDraft();state.editingId=id;state.pdfDraft=SnudiPdf.attachments(state.records[state.tab].find(x=>x.id===id)||{}).map(a=>({...a,id:photoId(),file:null}));render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});}
 function parseDownloadLinks(raw){const links=[];for(const line of String(raw||'').split(/\r?\n/).map(x=>x.trim()).filter(Boolean)){
  const sep=line.indexOf('|');if(sep<1)throw Error('Chaque lien PDF doit respecter le format : Titre | https://adresse');
  const label=line.slice(0,sep).trim(),url=line.slice(sep+1).trim();let parsed;try{parsed=new URL(url);}catch{}
@@ -205,6 +331,13 @@ function createRecord(form){const fd=new FormData(form),original=state.records[s
    r.order=Math.max(others.length,maximum+1);
   }
  }
+ if(state.pdfDraft.length>PDF_MAX_PER_PUBLICATION)throw Error('Pas plus de 20 PDF par publication.');
+ const allLabels=state.pdfDraft.map(a=>String(a.label||'').trim());
+ if(allLabels.some(label=>!label||label.length>120))throw Error('Chaque PDF doit avoir un titre (120 caractères maximum).');
+ if(state.pdfDraft.some(a=>!a.file&&!SnudiPdf.normalize(a.path)))throw Error('Un PDF sélectionné a un chemin invalide.');
+ // Les chemins des nouveaux fichiers seront ajoutés APRÈS leur transfert.
+ const published=state.pdfDraft.filter(a=>!a.file).map(a=>({label:String(a.label).trim(),path:SnudiPdf.normalize(a.path)}));
+ if(published.length)r.attachments=published;else delete r.attachments;
  r.id=original?.id||('pub-'+Date.now().toString(36)+'-'+Math.random().toString(36).slice(2,8));return r;}
 async function writeRemote(type,records,sha,commit){const payload={message:commit,branch:state.branch,content:encode64(JSON.stringify(records,null,2)+'\n'),sha};const {response,result}=await api(PATHS[type],'PUT',payload);if(!response.ok){if(response.status===409||response.status===422)throw Error('Conflit : les contenus ont changé sur GitHub. Actualise-les avant de réessayer.');throw Error(`Publication impossible (HTTP ${response.status}) : ${result.message||'vérifie les permissions GitHub'}`);}return result.content?.sha||'';}
 async function assertUnchanged(type){const fresh=await readRemote(type);if(fresh.sha!==state.sha[type])throw Error('Une autre modification a été publiée sur GitHub. Recharge les contenus avant de recommencer.');}
@@ -241,22 +374,53 @@ async function uploadPendingMedia(record){let html=draftHtml();const temp=docume
 async function cleanUnusedMedia(previousRecords,currentRecords){const previous=new Set(previousRecords.flatMap(r=>[...usedPaths(r)]));const current=new Set(currentRecords.flatMap(r=>[...usedPaths(r)]));const obsolete=[...previous].filter(path=>!current.has(path));if(!obsolete.length)return {deleted:0,errors:[]};const errors=[];let deleted=0;
  for(const path of obsolete){try{const {response,result}=await api(path.replace(/^\.\//,''));if(response.status===404)continue;if(!response.ok||!result.sha)throw Error('Fichier introuvable ou inaccessible');const deletion=await api(path.replace(/^\.\//,''),'DELETE',{message:'SNUDI FO 30 : retrait d’une image non utilisée',branch:state.branch,sha:result.sha});if(!deletion.response.ok)throw Error(`HTTP ${deletion.response.status}`);deleted++;}catch(error){errors.push(path+': '+error.message);}}
  return {deleted,errors};}
-async function publish(event){event.preventDefault();if(state.busy)return;let record;try{record=createRecord(event.currentTarget);}catch(error){message(error.message,'error');return;}
- const type=state.tab;const before=[...state.records[type]];const list=[...before];const position=list.findIndex(x=>x.id===record.id);
+async function publish(event){
+ event.preventDefault();if(state.busy)return;let record;try{record=createRecord(event.currentTarget);}catch(error){message(error.message,'error');return;}
+ const type=state.tab,before=[...state.records[type]],list=[...before],position=list.findIndex(x=>x.id===record.id);
  if(!confirm(`Publier ${position<0?'la nouvelle entrée':'les modifications'} « ${record.title} » sur GitHub ?`))return;
- setBusy(true);let mediaUploaded=false;
- try{await assertUnchanged(type);if(type==='news'||type==='tools'){const needed=mediaLinksInEditor().length+(state.coverDraft?1:0);if(needed)message(`Préparation et envoi de ${needed} image(s) sur GitHub…`);record=await uploadPendingMedia(record);mediaUploaded=needed>0;}
- if(position<0)list.unshift(record);else list[position]=record;
- const newSha=await writeRemote(type,list,state.sha[type],`SNUDI FO 30 : ${position<0?'ajout':'mise à jour'} ${type==='news'?'actualité':type==='events'?'calendrier':'outil'} — ${record.title.slice(0,55)}`);
- state.sha[type]=newSha;state.records[type]=list;const cleanup=type!=='events'?await cleanUnusedMedia(before,list):{deleted:0,errors:[]};resetDraft();render();
- message('Publication enregistrée sur GitHub. '+(cleanup.errors.length?`${cleanup.errors.length} ancienne(s) image(s) n’ont pas pu être supprimées ; le contenu reste publié.`:'Le déploiement GitHub Pages doit ensuite se terminer.'),cleanup.errors.length?'':'ok');
- }catch(error){message(error.message+(mediaUploaded?' Des images déjà envoyées peuvent rester sur GitHub ; réessaie la publication avant d’abandonner ce formulaire.':''),'error');}finally{setBusy(false);}}
-async function removeRecord(id){if(state.busy||!confirmDiscard())return;const type=state.tab;const old=state.records[type].find(x=>x.id===id);if(!old)return;if(!confirm(`Supprimer définitivement « ${old.title} » du contenu public sur GitHub ?`))return;
- setBusy(true);try{await assertUnchanged(type);const before=[...state.records[type]],updated=before.filter(x=>x.id!==id);const sha=await writeRemote(type,updated,state.sha[type],`SNUDI FO 30 : suppression ${type==='news'?'actualité':type==='events'?'événement':'outil'} — ${old.title.slice(0,55)}`);state.sha[type]=sha;state.records[type]=updated;const cleanup=type!=='events'?await cleanUnusedMedia(before,updated):{errors:[]};resetDraft();render();message(cleanup.errors.length?'Publication supprimée. Certaines anciennes images restent à nettoyer sur GitHub.':'Suppression enregistrée sur GitHub.','ok');}catch(error){message(error.message,'error');}finally{setBusy(false);}}
-function previewArticle(){if(state.tab==='events')return;const f=$('#recordForm');const dialog=$('#previewDialog');$('#previewTitle').textContent=f.elements.title?.value||'Sans titre';$('#previewMeta').textContent=state.tab==='news'?`${f.elements.date?.value||today()} · ${f.elements.tag?.value||'Actualité'}`:SECTION_NAMES[f.elements.section?.value]||'Mes outils';$('#previewSummary').textContent=f.elements.summary?.value||'';const cover=state.coverDraft?.url||(!state.coverRemoved?SnudiArticle.asPath(state.records[state.tab].find(x=>x.id===state.editingId)?.cover||''):'');$('#previewCover').hidden=!cover;if(cover)$('#previewCover').src=cover;else $('#previewCover').removeAttribute('src');$('#previewBody').innerHTML=SnudiArticle.sanitize(draftHtml(),{allowBlobs:true});const docs=$('#previewDownloads');docs.replaceChildren();docs.hidden=true;
+ setBusy(true);let mediaUploaded=false;const beforeRecord=before.find(x=>x.id===record.id)||{};
+ try{
+  await assertUnchanged(type);
+  if(type==='news'||type==='tools'){const needed=mediaLinksInEditor().length+(state.coverDraft?1:0);if(needed){message(`Envoi de ${needed} image(s) sur GitHub…`);mediaUploaded=true;}record=await uploadPendingMedia(record);}
+  if(state.pdfDraft.some(d=>d.file))message('Vérification et transfert des documents PDF sur GitHub…');
+  record=await uploadPendingPdfs(record);
+  if(position<0)list.unshift(record);else list[position]=record;
+  const sha=await writeRemote(type,list,state.sha[type],`SNUDI FO 30 : ${position<0?'ajout':'mise à jour'} ${type==='news'?'actualité':type==='events'?'calendrier':'outil'} — ${record.title.slice(0,55)}`);
+  state.sha[type]=sha;state.records[type]=list;
+  const imageCleanup=type!=='events'?await cleanUnusedMedia(before,list):{errors:[]};
+  const oldPdfs=SnudiPdf.referencedPaths(beforeRecord),newPdfs=SnudiPdf.referencedPaths(record);
+  const pdfCleanup=await cleanUnreferencedPdfs([...oldPdfs].filter(p=>!newPdfs.has(p)));
+  resetDraft();state.pdfUploadPaths.clear();render();
+  const errors=[...imageCleanup.errors,...pdfCleanup.errors];message(`Publication enregistrée sur GitHub. ${pdfCleanup.deleted?pdfCleanup.deleted+' PDF inutilisé(s) supprimé(s) du dépôt. ':''}${errors.length?errors.length+' fichier(s) n’ont pas pu être nettoyés ; aucun PDF utilisé n’a été supprimé.':'Le site sera visible après le déploiement de GitHub Pages.'}`,errors.length?'':'ok');
+ }catch(error){
+  let note='';
+  if(state.pdfUploadPaths.size){
+   const cleanup=await cleanUnreferencedPdfs([...state.pdfUploadPaths]);
+   if(cleanup.errors.length)note=' Le nettoyage des PDF transférés n’a pas pu être entièrement vérifié ; certains fichiers peuvent rester sur GitHub.';
+   else if(cleanup.deleted)note=' Les PDF sans publication ont été nettoyés.';
+   state.pdfUploadPaths.clear();
+  }
+  message(error.message+note+(mediaUploaded?' Des images déjà transférées peuvent rester sur GitHub.':''),'error');
+ }finally{setBusy(false);}
+}
+async function removeRecord(id){
+ if(state.busy||!confirmDiscard())return;const type=state.tab,old=state.records[type].find(x=>x.id===id);if(!old)return;
+ if(!confirm(`Supprimer définitivement « ${old.title} » du contenu public sur GitHub ? Les PDF qui ne sont plus utilisés ailleurs seront retirés du dépôt.`))return;
+ setBusy(true);try{
+  await assertUnchanged(type);const before=[...state.records[type]],updated=before.filter(x=>x.id!==id);
+  const sha=await writeRemote(type,updated,state.sha[type],`SNUDI FO 30 : suppression ${type==='news'?'actualité':type==='events'?'événement':'outil'} — ${old.title.slice(0,55)}`);
+  state.sha[type]=sha;state.records[type]=updated;
+  const imageCleanup=type!=='events'?await cleanUnusedMedia(before,updated):{errors:[]};
+  const pdfCleanup=await cleanUnreferencedPdfs([...SnudiPdf.referencedPaths(old)]);
+  resetDraft();render();const errors=[...imageCleanup.errors,...pdfCleanup.errors];
+  message('Publication supprimée sur GitHub. '+(pdfCleanup.deleted?pdfCleanup.deleted+' PDF inutilisé(s) supprimé(s). ':'')+(errors.length?'Des fichiers n’ont pas pu être nettoyés : consulte le dépôt.':''),errors.length?'':'ok');
+ }catch(error){message(error.message,'error');}finally{setBusy(false);}
+}
+function previewArticle(){const f=$('#recordForm');const dialog=$('#previewDialog');$('#previewTitle').textContent=f.elements.title?.value||'Sans titre';$('#previewMeta').textContent=state.tab==='news'?`${f.elements.date?.value||today()} · ${f.elements.tag?.value||'Actualité'}`:state.tab==='events'?`${f.elements.date?.value||''} · ${f.elements.type?.value||'Événement'}`:SECTION_NAMES[f.elements.section?.value]||'Mes outils';$('#previewSummary').textContent=f.elements.summary?.value||'';const cover=state.coverDraft?.url||(!state.coverRemoved?SnudiArticle.asPath(state.records[state.tab].find(x=>x.id===state.editingId)?.cover||''):'');$('#previewCover').hidden=!cover;if(cover)$('#previewCover').src=cover;else $('#previewCover').removeAttribute('src');$('#previewBody').innerHTML=state.tab==='events'?'':SnudiArticle.sanitize(draftHtml(),{allowBlobs:true});const docs=$('#previewDownloads');docs.replaceChildren();docs.hidden=true;
+ const associated=state.pdfDraft.filter(d=>d.label.trim());if(associated.length){docs.hidden=false;docs.append(mk('h3','','PDF joints à cette publication'));for(const d of associated){const row=mk('div','pdf-preview-row');row.append(mk('span','',d.label+(d.file?' (nouveau fichier, pas encore publié)':'')));if(d.path){const a=mk('a','btn btn-outline btn-sm','Ouvrir ↗');a.href=SnudiPdf.href(d.path);a.target='_blank';a.rel='noopener noreferrer';row.append(a);}docs.append(row);}}
  if(state.tab==='tools'&&f.elements.section?.value==='affichages'){
   let links;try{links=parseDownloadLinks(f.elements.downloads?.value||'');}catch(error){message(error.message,'error');return;}
-  if(links.length){const heading=mk('h3','','Documents à consulter ou télécharger');docs.append(heading);for(const link of links){const a=mk('a','btn btn-outline btn-block',link.label+' ↗');a.href=link.url;a.rel='noopener noreferrer';a.target='_blank';docs.append(a);}docs.hidden=false;}
+  if(links.length){const heading=mk('h3','','Liens PDF externes');docs.append(heading);for(const link of links){const a=mk('a','btn btn-outline btn-block',link.label+' ↗');a.href=link.url;a.rel='noopener noreferrer';a.target='_blank';docs.append(a);}docs.hidden=false;}
  }dialog.showModal();}
 function renderHomePanel(){const src=state.homeRemoved?'':state.homeDraft?.url||state.home.banner||'';const img=$('#homeBannerImg');img.hidden=!src;$('#homeBannerEmpty').hidden=!!src;if(src)img.src=src;else img.removeAttribute('src');$('#homeBannerAlt').value=state.homeAlt||'';$('#homeBannerFileHint').textContent=state.homeDraft?`Image sélectionnée et optimisée (${Math.round(state.homeDraft.size/1024)} Ko). Elle sera envoyée lors de la publication.`:state.homeRemoved?'Le bandeau sera retiré après publication.':'Aucune nouvelle image sélectionnée.';$('#publishHomeBanner').disabled=state.busy||!state.homeDirty;}
 async function chooseHomeImage(file){if(!file)return;setBusy(true);try{const img=await compressPhoto(file);if(state.homeDraft?.url)URL.revokeObjectURL(state.homeDraft.url);state.homeDraft={...img,url:URL.createObjectURL(img.blob)};state.homeRemoved=false;state.homeDirty=true;renderHomePanel();message('Bandeau prêt à être publié ('+Math.round(img.size/1024)+' Ko).','ok');}catch(err){message(err.message,'error');}finally{setBusy(false);renderHomePanel();}}
@@ -270,8 +434,8 @@ async function publishHome(){if(state.busy||!state.homeDirty)return;const alt=$(
  // Nettoyage uniquement des anciens bandeaux gérés par cette rubrique, après succès.
  if(previous&&previous!==banner&&/^\.\/media\/accueil\/bandeau-[A-Za-z0-9.-]+\.(?:webp|jpg)$/.test(previous)){try{const path=previous.slice(2);const old=await api(path);if(old.response.ok&&old.result.sha)await api(path,'DELETE',{message:'SNUDI FO 30 : suppression ancien bandeau',branch:state.branch,sha:old.result.sha});}catch{}}
  }catch(error){message(error.message+(newImagePath?' Une image transférée peut rester sur GitHub si la publication de configuration a échoué.':''),'error');}finally{setBusy(false);renderHomePanel();}}
-function backup(){const content={generatedAt:new Date().toISOString(),news:state.records.news,events:state.records.events,tools:state.records.tools,home:state.home};const blob=new Blob([JSON.stringify(content,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sauvegarde-snudi-fo-30.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
-function disconnect(){if(state.busy||!confirmDiscard()||!ensureReorderClosed()||!confirmHomeDiscard())return;resetDraft();resetHomeDraft();state.token='';state.owner='';state.repo='';state.sha={news:'',events:'',tools:''};state.records={news:[],events:[],tools:[]};$('#workspace').hidden=true;$('#connection').hidden=false;$('#token').value='';message('Déconnecté. Le jeton n’a pas été conservé.');}
+function backup(){const content={generatedAt:new Date().toISOString(),news:state.records.news,events:state.records.events,tools:state.records.tools,home:state.home,pdfFiles:state.pdfLibrary.map(x=>({path:x.path,size:x.size}))};const blob=new Blob([JSON.stringify(content,null,2)],{type:'application/json'}),url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='sauvegarde-snudi-fo-30.json';a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+function disconnect(){if(state.busy||!confirmDiscard()||!ensureReorderClosed()||!confirmHomeDiscard())return;resetDraft();resetHomeDraft();state.token='';state.owner='';state.repo='';state.sha={news:'',events:'',tools:''};state.records={news:[],events:[],tools:[]};state.pdfUploadPaths.clear();state.pdfLibrary=[];state.pdfLibraryError='';$('#workspace').hidden=true;$('#connection').hidden=false;$('#token').value='';message('Déconnecté. Le jeton n’a pas été conservé.');}
 $('#connectForm').addEventListener('submit',connect);
 $('#recordForm').addEventListener('submit',publish);
 $('#tabNews').addEventListener('click',()=>chooseTab('news'));
@@ -292,10 +456,10 @@ $('#cancelReorder').addEventListener('click',()=>{if(!ensureReorderClosed())retu
 $('#saveReorder').addEventListener('click',saveReorder);
 $('#reorderItems').addEventListener('click',e=>{const b=e.target.closest('[data-move]');if(b)moveReorder(b.dataset.id,b.dataset.move);});
 $('#newButton').addEventListener('click',()=>{if(state.busy||!confirmDiscard()||!ensureReorderClosed())return;resetDraft();render();$('#recordForm').scrollIntoView({behavior:'smooth',block:'start'});});
-$('#recordForm').addEventListener('input',e=>{state.dirty=true;if(e.target.id==='richEditor')saveRange();});
-$('#recordForm').addEventListener('change',e=>{if(e.target.id==='field_section')showPdfLinks();if(['coverFile','inlineImageInput','replaceInlineInput'].includes(e.target.id)){const file=e.target.files?.[0];if(e.target.id==='coverFile')selectCover(file);else insertInline(file,e.target.id==='replaceInlineInput');e.target.value='';}else state.dirty=true;});
+$('#recordForm').addEventListener('input',e=>{if(e.target.matches('[data-pdf-label]')){const pdf=state.pdfDraft.find(d=>d.id===e.target.dataset.pdfLabel);if(pdf){pdf.label=e.target.value;state.dirty=true;}return;}state.dirty=true;if(e.target.id==='richEditor')saveRange();});
+$('#recordForm').addEventListener('change',async e=>{if(e.target.id==='pdfFileInput'){const files=[...(e.target.files||[])];e.target.value='';for(const file of files){try{await addPdfFile(file);}catch(error){message(error.message,'error');}}return;}if(e.target.id==='pdfLibrarySelect'){return;}if(e.target.id==='field_section')showPdfLinks();if(['coverFile','inlineImageInput','replaceInlineInput'].includes(e.target.id)){const file=e.target.files?.[0];if(e.target.id==='coverFile')selectCover(file);else insertInline(file,e.target.id==='replaceInlineInput');e.target.value='';}else state.dirty=true;});
 $('#recordForm').addEventListener('mousedown',e=>{if(e.target.closest('.rich-tool')){saveRange();e.preventDefault();}});
-$('#recordForm').addEventListener('click',e=>{const cmd=e.target.closest('[data-cmd]');if(cmd){applyFormat(cmd.dataset.cmd);return;}if(e.target.closest('#cancelEdit')){if(!confirmDiscard())return;resetDraft();render();return;}if(e.target.closest('#previewArticle')){previewArticle();return;}if(e.target.closest('#removeCover')){removeCover();return;}
+$('#recordForm').addEventListener('click',e=>{const removePdf=e.target.closest('[data-remove-pdf]');if(removePdf){state.pdfDraft=state.pdfDraft.filter(d=>d.id!==removePdf.dataset.removePdf);state.dirty=true;renderPdfAttachments();return;}if(e.target.closest('#pdfAddExisting')){addExistingPdf();return;}const cmd=e.target.closest('[data-cmd]');if(cmd){applyFormat(cmd.dataset.cmd);return;}if(e.target.closest('#cancelEdit')){if(!confirmDiscard())return;resetDraft();render();return;}if(e.target.closest('#previewArticle')){previewArticle();return;}if(e.target.closest('#removeCover')){removeCover();return;}
  if(e.target.closest('#insertInlineImage')){saveRange();$('#inlineImageInput').click();return;}if(e.target.closest('#replaceInline')){$('#replaceInlineInput').click();return;}if(e.target.closest('#deleteInline')){deleteInline();return;}
  const image=e.target.closest('#richEditor img');if(image)updateSelectedImage(image);
  });

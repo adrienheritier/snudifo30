@@ -89,3 +89,14 @@
 
 /* V3.6 : liste de liens PDF externes */
 .pdf-link-editor{display:grid;gap:8px;border:1px solid var(--line);background:#fffdfd;border-radius:14px;padding:15px}.pdf-link-editor textarea{min-height:110px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.82rem}
+
+/* V3.7 : bibliothèque PDF partagée entre toutes les rubriques. */
+.pdf-admin{border:1px solid var(--line);border-radius:14px;padding:16px;display:grid;gap:12px;background:#fffdfd}
+.pdf-admin .pdf-actions{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+.pdf-admin .pdf-actions .form-control{flex:1 1 210px;min-width:0}
+.pdf-admin input[type=file]{max-width:100%;font-size:.85rem}
+.pdf-admin-list{display:grid;gap:10px}
+.pdf-attachment-item{border:1px solid var(--line);border-radius:11px;padding:10px;display:grid;gap:8px;grid-template-columns:minmax(0,1fr) auto;align-items:end;background:#fff}
+.pdf-attachment-item .form-control{min-width:0}
+.pdf-attachment-meta{grid-column:1/-1;font-size:.78rem;color:var(--muted)}
+.pdf-preview-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid var(--line);padding:10px;border-radius:10px}

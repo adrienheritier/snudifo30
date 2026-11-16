@@ -76,3 +76,11 @@
 
 /* V3.6 : liens de téléchargement PDF externes pour les affichages écoles */
 .pdf-downloads{border-top:1px solid var(--line);padding-top:18px;margin-top:20px}.pdf-downloads h3{margin:0 0 12px;font-size:1rem}.pdf-downloads .btn{justify-content:flex-start;white-space:normal;text-align:left;overflow-wrap:anywhere}.pdf-downloads .stack{gap:8px}
+
+/* V3.7 : documents PDF dans les actualités, calendrier et outils. */
+.pdf-public-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border:1px solid var(--line);border-radius:12px;padding:12px;background:#fff}
+.pdf-public-row>span{display:flex;align-items:center;gap:9px;flex:1 1 170px;min-width:0;overflow-wrap:anywhere}
+.pdf-public-actions{display:flex;align-items:center;flex-wrap:wrap;gap:7px}
+.pdf-public-actions .btn{white-space:nowrap}
+.pdf-downloads{margin-top:18px}
+@media(max-width:460px){.pdf-public-actions{width:100%;justify-content:stretch}.pdf-public-actions .btn{flex:1;text-align:center}}
