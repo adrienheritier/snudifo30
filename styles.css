@@ -73,3 +73,6 @@
 /* V3.5 — Accès rapides uniformes (blanc et rouge) */
 .grid-three .tile{background:#fff;border-color:var(--line)}
 .grid-three .tile .tile-icon{background:var(--red-soft);color:var(--red)}
+
+/* V3.6 : liens de téléchargement PDF externes pour les affichages écoles */
+.pdf-downloads{border-top:1px solid var(--line);padding-top:18px;margin-top:20px}.pdf-downloads h3{margin:0 0 12px;font-size:1rem}.pdf-downloads .btn{justify-content:flex-start;white-space:normal;text-align:left;overflow-wrap:anywhere}.pdf-downloads .stack{gap:8px}

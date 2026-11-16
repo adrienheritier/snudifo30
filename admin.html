@@ -9,9 +9,9 @@
   <meta name="description" content="Édition des actualités, du calendrier et des outils SNUDI-FO 30.">
   <link rel="icon" href="./assets/favicon-snudi-relief-48.png" type="image/png" sizes="48x48">
   <link rel="stylesheet" href="./styles.css">
-  <link rel="stylesheet" href="./admin.css?v=3.4">
+  <link rel="stylesheet" href="./admin.css?v=3.6">
   <script defer src="./article-content.js?v=3.1"></script>
-  <script defer src="./admin.js?v=3.4"></script>
+  <script defer src="./admin.js?v=3.6"></script>
   <title>Administration — SNUDI-FO 30</title>
 </head>
 <body class="admin-body">
@@ -38,7 +38,7 @@
       <div><span class="eyebrow">Dépôt connecté</span><h1 id="repositoryTitle">Administration</h1><p id="repositorySubtitle" class="muted"></p></div>
       <div class="flex-wrap"><button id="reloadButton" class="btn btn-outline" type="button">Actualiser les contenus</button><button id="backupButton" class="btn btn-neutral" type="button">Exporter une sauvegarde</button><button id="disconnectButton" class="btn btn-neutral" type="button">Déconnexion</button></div>
     </div>
-    <div class="notice neutral" style="margin:16px 0"><b>V3.4 : tu peux désormais changer le bandeau de l’accueil depuis l’administration.</b> Chaque publication crée un commit GitHub. Les collègues voient le nouveau contenu après le déploiement de GitHub Pages et une actualisation de l’application. Il n’y a pas de publication immédiate sur un serveur distinct.</div>
+    <div class="notice neutral" style="margin:16px 0"><b>V3.6 : nouvelle rubrique « Affichages écoles » avec images, articles enrichis et liens PDF externes.</b> Chaque publication crée un commit GitHub. Les collègues voient le nouveau contenu après le déploiement de GitHub Pages et une actualisation de l’application. Il n’y a pas de publication immédiate sur un serveur distinct.</div>
     <div id="workingIndicator" class="notice neutral" hidden aria-live="polite">Publication en cours : ne ferme pas cette page pendant le transfert des images et des textes.</div>
     <div class="admin-tabs" role="tablist" aria-label="Rubrique à administrer">
       <button type="button" id="tabNews" data-tab="news" role="tab" aria-selected="true" class="active">Actualités</button>
@@ -52,10 +52,11 @@
         <label id="toolFilterRow" class="form-control tool-filter" hidden>Filtrer les outils
           <select id="toolSectionFilter" class="input">
             <option value="all">Toutes les rubriques</option>
-            <option value="bareme">Barème mouvement</option>
-            <option value="modeles">Modèles de courriers</option>
+            <option value="affichages">Affichages écoles</option>
             <option value="fiches">Fiches pratiques</option>
-            <option value="documents">Documents utiles</option>
+            <option value="modeles">Modèles de courriers</option>
+            <option value="bareme">Barème mouvement</option>
+            <option value="documents">Documents utiles (ancienne rubrique, archives)</option>
           </select>
         </label>
         <div id="reorderToolbar" class="reorder-toolbar" hidden>
@@ -102,7 +103,7 @@
   </section>
   <dialog id="previewDialog" class="preview-dialog" aria-label="Aperçu de la publication">
     <div class="preview-header"><b>Aperçu de la publication sur l’application</b><button id="closePreview" type="button" class="btn btn-neutral btn-sm">Fermer</button></div>
-    <div class="preview-body"><p id="previewMeta" class="muted"></p><h2 id="previewTitle"></h2><p id="previewSummary" class="preview-summary"></p><img id="previewCover" class="article-cover" alt="Couverture" hidden><div id="previewBody" class="article-content"></div></div>
+    <div class="preview-body"><p id="previewMeta" class="muted"></p><h2 id="previewTitle"></h2><p id="previewSummary" class="preview-summary"></p><img id="previewCover" class="article-cover" alt="Couverture" hidden><div id="previewBody" class="article-content"></div><section id="previewDownloads" class="pdf-downloads" hidden></section></div>
   </dialog>
   <p id="adminMessage" role="status" aria-live="polite" class="admin-message" hidden></p>
   <footer class="footer-note">Espace d’édition du site public SNUDI-FO 30. Ne pas publier d’informations personnelles concernant les collègues ou des élèves.</footer>

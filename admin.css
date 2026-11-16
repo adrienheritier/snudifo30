@@ -86,3 +86,6 @@
 .home-admin-form{display:grid;gap:14px}.home-admin-form .form-control{display:grid;gap:7px}
 .home-admin-form .flex-wrap{gap:10px}
 @media(max-width:650px){.admin-tabs{overflow:auto}.admin-tabs button{white-space:nowrap;padding:10px 12px}.home-admin-card{padding:17px}}
+
+/* V3.6 : liste de liens PDF externes */
+.pdf-link-editor{display:grid;gap:8px;border:1px solid var(--line);background:#fffdfd;border-radius:14px;padding:15px}.pdf-link-editor textarea{min-height:110px;font-family:ui-monospace,SFMono-Regular,Consolas,monospace;font-size:.82rem}
