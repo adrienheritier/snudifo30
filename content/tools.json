@@ -261,7 +261,7 @@
     "tag": "AESH",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les AESH sont des agents contractuels de droit public. Les conditions d’emploi et les missions sont encadrées par des textes et un guide national ; chaque situation dépend également des dispositions contractuelles applicables.</p><h2>Premières démarches</h2><p>Relisez votre contrat, sa quotité et votre emploi du temps ; gardez les éventuelles demandes de modification par écrit.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO revendique un statut et un vrai salaire pour les AESH et accompagne les collègues dans leurs difficultés.</p>",
     "url": "https://www.education.gouv.fr/etre-accompagnant-des-eleves-en-situation-de-handicap-aesh-12188",
-    "order": 6
+    "order": 10
   },
   {
     "id": "r5",
@@ -295,7 +295,7 @@
     "tag": "Santé",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Lorsqu’un agent est victime, notamment dans l’exercice de ses fonctions, de certaines attaques ou poursuites, la protection fonctionnelle peut s’appliquer selon les circonstances. Son octroi et ses modalités demandent une analyse individuelle.</p><h2>Premières démarches</h2><p>Conservez les éléments factuels ; signalez rapidement les faits ; demandez conseil avant d’engager une procédure.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le syndicat peut aider à préparer un signalement ou une demande et à suivre la réponse de l’administration.</p>",
     "url": "https://www.service-public.fr/particuliers/vosdroits/F32574",
-    "order": 7
+    "order": 6
   },
   {
     "id": "r8",
@@ -305,7 +305,7 @@
     "tag": "Santé",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les conditions d’ouverture, les pièces nécessaires, les durées et les effets sur la rémunération dépendent du type de congé et du statut. Le CITIS répond à un régime spécifique ; il ne se substitue pas automatiquement à un congé de maladie.</p><h2>Premières démarches</h2><p>Identifiez précisément le régime concerné ; respectez les délais de transmission ; conservez vos justificatifs et sollicitations.</p><h2>Accompagnement du SNUDI-FO</h2><p>En cas de difficulté, contactez le syndicat avant d’envoyer des documents médicaux sensibles.</p>",
     "url": "https://www.service-public.fr/particuliers/vosdroits/N512",
-    "order": 8
+    "order": 7
   },
   {
     "id": "r9",
@@ -315,7 +315,7 @@
     "tag": "Carrière",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les autorisations d’absence peuvent être de droit ou accordées sous réserve des nécessités de service, selon leur fondement. Les règles spécifiques doivent être vérifiées avec les textes et les instructions applicables.</p><h2>Premières démarches</h2><p>Précisez le motif ; recherchez la base réglementaire ; formulez une demande écrite et conservez la réponse.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO peut étudier les possibilités d’autorisation ou les contestations.</p>",
     "url": "https://www.service-public.gouv.fr/particuliers/vosdroits/N19978",
-    "order": 9
+    "order": 8
   },
   {
     "id": "r10",
@@ -325,7 +325,7 @@
     "tag": "Carrière",
     "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Le dispositif comporte des étapes et des délais réglementaires. Il faut consulter les règles de la campagne et les notifications individuelles pour apprécier les possibilités de recours.</p><h2>Premières démarches</h2><p>Conservez les documents transmis ; relevez les dates de notification ; contactez le syndicat rapidement si vous envisagez un recours.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO peut vous accompagner dans l’analyse de l’appréciation et des voies de recours.</p>",
     "url": "https://www.education.gouv.fr/metiers-de-l-enseignement-et-de-l-education-89624",
-    "order": 10
+    "order": 9
   },
   {
     "id": "r11",
