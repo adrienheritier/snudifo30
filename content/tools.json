@@ -224,8 +224,14 @@
     "title": "Obligations de service des PE",
     "summary": "24 h d’enseignement hebdomadaire et 108 h annuelles de missions complémentaires.",
     "tag": "PE",
-    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Le décret n° 2008-775 (articles 1 et 2, version consolidée) fixe 24 heures d’enseignement par semaine et 108 heures annuelles. La répartition de ces 108 heures est définie par les textes. Certaines fonctions connaissent des modalités particulières.</p><h2>Premières démarches</h2><p>Consultez votre répartition annuelle ; conservez les convocations et relevés d’heures ; contactez le syndicat en cas de désaccord.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO peut vous aider à vérifier si les obligations demandées correspondent aux textes applicables.</p>",
-    "url": "https://www.legifrance.gouv.fr/loda/id/LEGITEXT000034326444/"
+    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>En complément des 24 h hebdomadaires d’enseignement, les <strong>108 h annuelles</strong> se répartissent en : <strong>36 h d’APC, 48 h de travail en équipe, relations avec les parents et suivi des PPS, 18 h de formation et d’animations pédagogiques, 6 h de conseils d’école</strong>.&nbsp;</p><p>Des adaptations existent selon les fonctions et la quotité de travail. Gardez un décompte de vos heures pour faire respecter vos obligations de service.</p>",
+    "attachments": [
+      {
+        "label": "Affiche 108h",
+        "path": "media/pdfs/f1566294c15498660735dea08033dcacd91062d01e620a4dc4abad172c582d5d.pdf"
+      }
+    ],
+    "cover": "./media/outils/mwj6mimu-pa8mtufyho-couverture.webp"
   },
   {
     "id": "r2",
