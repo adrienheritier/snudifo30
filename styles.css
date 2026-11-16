@@ -25,15 +25,15 @@
 /* V3 : cartes illustrées et articles riches */
 .news-card.with-cover{grid-template-columns:112px minmax(0,1fr);align-items:start}
 .news-card-text{min-width:0}
-.news-picture{width:112px;height:100px;border-radius:11px;object-fit:cover;background:#f3f4f6;display:block}
-.article-cover{width:100%;max-height:450px;object-fit:cover;border-radius:14px;margin:12px 0 8px;display:block;background:#f4f4f6}
+.news-picture{width:112px;height:100px;border-radius:11px;object-fit:contain;background:#f3f4f6;display:block}
+.article-cover{display:block;width:auto;max-width:100%;height:auto;max-height:none;object-fit:contain;border-radius:14px;margin:12px auto 8px;background:#f4f4f6}
 .article-content{white-space:normal;line-height:1.7;overflow-wrap:anywhere}
 .article-content h2,.article-content h3,.article-content h4{margin:1.4em 0 .55em;line-height:1.25}
 .article-content h2{font-size:1.35rem}.article-content h3{font-size:1.13rem}
 .article-content p{margin:.7em 0 1.05em}.article-content ul,.article-content ol{margin:8px 0 16px;padding-left:24px}
 .article-content li{margin:5px 0}.article-content blockquote{border-left:4px solid var(--red);padding:10px 15px;background:#fff8e9;margin:15px 0;border-radius:0 9px 9px 0}
-.article-content img{width:auto;max-width:100%;height:auto;display:block;margin:12px auto;border-radius:10px}
-.article-content figure{margin:20px 0;text-align:center}.article-content figure img{max-width:100%;max-height:720px;object-fit:contain}
+.article-content img{width:auto;max-width:100%;height:auto;max-height:none;object-fit:contain;display:block;margin:12px auto;border-radius:10px}
+.article-content figure{margin:20px 0;text-align:center}.article-content figure img{max-width:100%;max-height:none;object-fit:contain}
 .article-content figcaption{font-size:.75rem;color:var(--muted);text-align:center;margin-top:5px}
 .article-content a{color:var(--red);font-weight:700;text-decoration:underline;text-underline-offset:2px}
 .legacy-body{white-space:pre-wrap}
@@ -41,7 +41,7 @@
 
 /* V3.1 — ressources éditoriales « Mes outils » */
 .tool-item-card{align-items:center;gap:12px;min-height:86px}
-.tool-item-thumb{width:76px;height:76px;border-radius:11px;object-fit:cover;flex:none;background:#f7f7f9}
+.tool-item-thumb{width:76px;height:76px;border-radius:11px;object-fit:contain;flex:none;background:#f7f7f9}
 .tool-detail .article-content{margin-top:18px}
 @media (max-width:400px){.tool-item-thumb{width:62px;height:68px}}
 
@@ -179,4 +179,22 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
 }
 @media (prefers-reduced-motion: reduce) {
   .mobile-top .refresh-button[aria-busy="true"] .ico { animation: none; }
+}
+
+/* V3.14 — Affichage integral des illustrations, sans deformation ni recadrage.
+   Sur ordinateur les images de publications ne depassent pas 800px ;
+   sur mobile elles restent limitees par la largeur disponible.
+   Le bandeau de l'accueil conserve ses regles specifiques. */
+.news-detail .article-cover,
+.tool-detail .article-cover,
+.article-content img,
+.article-content figure img {
+  display: block;
+  width: auto;
+  max-width: min(100%, 800px);
+  height: auto;
+  max-height: none;
+  object-fit: contain;
+  margin-left: auto;
+  margin-right: auto;
 }
