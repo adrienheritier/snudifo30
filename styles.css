@@ -198,3 +198,11 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   margin-left: auto;
   margin-right: auto;
 }
+
+/* V3.15 — Six raccourcis dans la barre rouge, utilisables sur écran étroit. */
+.bottom-nav button { flex: 1 1 0; min-width: 0; }
+@media (max-width: 420px) {
+  .bottom-nav { gap: 0; padding-left: 4px; padding-right: 4px; }
+  .bottom-nav button { padding: 5px 0; gap: 4px; font-size: .61rem; }
+  .bottom-nav button .ico { width: 20px; height: 20px; }
+}
