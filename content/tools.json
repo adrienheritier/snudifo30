@@ -337,16 +337,6 @@
     "order": 1
   },
   {
-    "id": "r12",
-    "section": "fiches",
-    "title": "Fermeture de classe",
-    "summary": "Suivi des décisions, conséquences pour l’équipe et possibilités de mobilisation.",
-    "tag": "Carte scolaire",
-    "bodyHtml": "<h2>Ce qu’il faut savoir</h2><p>Les propositions et décisions de carte scolaire s’inscrivent dans un calendrier d’instances et de consultations. Les conséquences d’une mesure sur les personnels dépendent notamment de leur situation et des règles du mouvement.</p><h2>Premières démarches</h2><p>Rassemblez les effectifs et prévisions ; transmettez la situation au syndicat ; demandez un point sur les conséquences individuelles.</p><h2>Accompagnement du SNUDI-FO</h2><p>Le SNUDI-FO du Gard suit les mesures de carte scolaire et défend le maintien des postes.</p>",
-    "url": "https://snudi30.force-ouvriere.org/-carte-scolaire-departementale-",
-    "order": 11
-  },
-  {
     "id": "d3",
     "section": "affichages",
     "title": "Calendrier des formations 2026-2027",
