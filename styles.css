@@ -105,7 +105,7 @@
 .pdf-viewer-heading h1{margin:0 0 4px;font-size:clamp(1.03rem,2.8vw,1.35rem)}
 .pdf-viewer-heading .chip{display:none}
 .pdf-reader{border:1px solid var(--line);border-radius:12px;overflow:hidden;background:#e9ebef;min-width:0}
-.pdf-reader-controls{display:flex;align-items:center;justify-content:center;gap:5px;min-height:49px;background:#fff;border-bottom:1px solid var(--line);padding:6px 7px;position:sticky;top:74px;z-index:15}
+.pdf-reader-controls{display:flex;align-items:center;justify-content:center;gap:5px;min-height:49px;background:#fff;border-bottom:1px solid var(--line);padding:6px 7px}
 .pdf-reader-button{min-width:39px;height:36px;display:inline-flex;align-items:center;justify-content:center;background:#fff;border:1px solid #dadde3;border-radius:8px;color:var(--red);font-size:1.16rem;font-weight:800;cursor:pointer}
 .pdf-reader-button:disabled{opacity:.30;cursor:not-allowed}
 .pdf-reader-counter{min-width:90px;text-align:center;font-size:.80rem;font-weight:800;white-space:nowrap}
@@ -122,7 +122,7 @@
  .pdf-workspace .main{padding:10px 10px 25px}
  .pdf-workspace .mobile-top.pdf-top{height:60px}
  .pdf-reader-scroll{height:calc(100dvh - 228px);min-height:240px;padding:7px}
- .pdf-reader-controls{top:60px;gap:4px;padding-inline:4px}
+ .pdf-reader-controls{gap:4px;padding-inline:4px}
  .pdf-reader-button{min-width:34px;height:34px}
  .pdf-reader-counter{min-width:77px;font-size:.73rem}
  .pdf-reader-zoom{min-width:44px;font-size:.70rem}
@@ -130,3 +130,17 @@
  .pdf-viewer-actions .btn{flex:none;width:100%}
 }
 @media(max-width:350px){.pdf-reader-divider{margin-inline:1px}.pdf-reader-controls{gap:2px}.pdf-reader-counter{min-width:70px}}
+
+/* V3.11 — Commandes de lecture directement sous le bandeau rouge.
+   La barre est soeur de <main>, et non dans le bloc PDF (overflow:hidden).
+   Elle reste visible sans recouvrir le canvas ou réduire la page affichée. */
+.pdf-workspace{--pdf-header-height:74px}
+.pdf-workspace .mobile-top.pdf-top{height:var(--pdf-header-height);position:sticky;top:0;z-index:70}
+.pdf-workspace>.pdf-reader-controls{position:sticky;top:var(--pdf-header-height);z-index:69;width:100%;box-shadow:0 2px 8px rgba(0,0,0,.08)}
+.pdf-workspace .main{padding-top:12px}
+@media(min-width:1000px){.pdf-workspace{--pdf-header-height:75px}}
+@media(max-width:600px){
+ .pdf-workspace{--pdf-header-height:60px}
+ .pdf-workspace .main{padding-top:10px}
+ .pdf-workspace .pdf-reader-scroll{height:calc(100dvh - 210px);min-height:240px}
+}

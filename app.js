@@ -169,9 +169,18 @@ function isExternalAddress(s){return /^https?:\/\//i.test(s||'');}
 function navButton(page,label,icon,active){return `<button data-action="nav" data-page="${page}" class="${active?'active':''}" aria-label="${label}">${ico(icon,21)}<span>${esc(label)}</span></button>`;}
 const primaryTabs=[['accueil','Accueil','home'],['actualites','Actus','news'],['calendrier','Agenda','calendar'],['outils','Outils','tools'],['menu','Menu','menu']];
 function getTab(page){if(page==='pdf'){const from=route().from.match(/^#\/([a-z-]+)/)?.[1]||'outils';return from==='pdf'?'outils':getTab(from);}if(page==='adhesion')return 'accueil';if(['droit','droits','accompagnement'].includes(page))return 'menu';if(['modele','simulateur','documents','affichages','dossiers','modeles','fiches','outil-detail'].includes(page))return 'outils';if(['evenement'].includes(page))return 'calendrier';if(['news-detail'].includes(page))return 'actualites';return primaryTabs.some(x=>x[0]===page)?page:'menu';}
+function pdfReaderToolbar(){return `<div class="pdf-reader-controls" role="group" aria-label="Navigation du document PDF">
+    <button class="pdf-reader-button" data-action="pdf-prev" aria-label="Page précédente" disabled>${ico('back',18)}</button>
+    <span class="pdf-reader-counter" id="pdf-page-counter" aria-live="polite">Chargement…</span>
+    <button class="pdf-reader-button" data-action="pdf-next" aria-label="Page suivante" disabled>${ico('arrow',18)}</button>
+    <span class="pdf-reader-divider"></span>
+    <button class="pdf-reader-button" data-action="pdf-zoom-out" aria-label="Dézoomer" disabled>−</button>
+    <span class="pdf-reader-zoom" id="pdf-zoom-label" aria-live="polite">100 %</span>
+    <button class="pdf-reader-button" data-action="pdf-zoom-in" aria-label="Zoomer" disabled>+</button>
+   </div>`;}
 function appShell(body,page){let tab=getTab(page);const sidebarTabs=[...primaryTabs.slice(0,4),['accompagnement','Accompagnement','help'],['contact','Contact','phone'],['menu','Plus','menu']];return `<div class="layout">
 <aside class="desktop-sidebar"><img class="sidebar-logo" src="./assets/logo-snudi-original.jpg" alt="Logo officiel SNUDI FO 30"/><div class="sidebar-tag">La force syndicale dans le Gard</div>${sidebarTabs.map(([p,l,i])=>`<button class="side-button ${p===page||p===tab?'active':''}" data-action="nav" data-page="${p}">${ico(i,20)} ${l}</button>`).join('')}<div class="sidebar-bottom"><b>Besoin d'un accompagnement ?</b><p>Le SNUDI-FO du Gard est à vos côtés.</p>${btn('Contacter le syndicat','nav:contact','btn btn-primary btn-sm btn-block')}</div></aside>
-<div class="workspace ${page==='pdf'?'pdf-workspace':''}"><header class="mobile-top ${page==='pdf'?'pdf-top':''}">${page==='pdf'?`<button type="button" class="pdf-top-back" data-action="pdf-back" aria-label="Revenir à la publication">${ico('back',21)} Retour</button>`:''}<img class="top-logo" src="./assets/logo-snudi-original.jpg" alt="SNUDI-FO 30"/><div class="top-name"><strong>SNUDI-FO 30</strong><span>Vos droits • Votre syndicat</span></div><span class="top-spacer"></span><button class="icon-btn" data-action="nav" data-page="notifications" aria-label="Notifications">${ico('bell',21)}${newsSort(data.news).some(n=>!settings.seenNews.includes(n.id))?'<i class="notification-dot"></i>':''}</button></header><main class="main">${body}<div class="footer-note">Application SNUDI-FO 30 • Vérifiez les sources et dates de mise à jour avant toute démarche.</div></main><nav class="bottom-nav" aria-label="Navigation principale">${primaryTabs.map(([p,l,i])=>navButton(p,l,i,tab===p)).join('')}</nav></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>`;}
+<div class="workspace ${page==='pdf'?'pdf-workspace':''}"><header class="mobile-top ${page==='pdf'?'pdf-top':''}">${page==='pdf'?`<button type="button" class="pdf-top-back" data-action="pdf-back" aria-label="Revenir à la publication">${ico('back',21)} Retour</button>`:''}<img class="top-logo" src="./assets/logo-snudi-original.jpg" alt="SNUDI-FO 30"/><div class="top-name"><strong>SNUDI-FO 30</strong><span>Vos droits • Votre syndicat</span></div><span class="top-spacer"></span><button class="icon-btn" data-action="nav" data-page="notifications" aria-label="Notifications">${ico('bell',21)}${newsSort(data.news).some(n=>!settings.seenNews.includes(n.id))?'<i class="notification-dot"></i>':''}</button></header>${page==='pdf'?pdfReaderToolbar():''}<main class="main">${body}<div class="footer-note">Application SNUDI-FO 30 • Vérifiez les sources et dates de mise à jour avant toute démarche.</div></main><nav class="bottom-nav" aria-label="Navigation principale">${primaryTabs.map(([p,l,i])=>navButton(p,l,i,tab===p)).join('')}</nav></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>`;}
 function heading(title,desc='',back=''){return `<div class="page-heading"><div>${back?`<div class="flex-wrap" style="align-items:center;margin-bottom:8px"><button data-action="back" class="backlink" aria-label="Retour">${ico('back')}</button><span class="eyebrow">SNUDI-FO 30</span></div>`:''}<h1>${esc(title)}</h1>${desc?`<p>${esc(desc)}</p>`:''}</div></div>`;}
 function titlebar(title,page){return `<div class="section-head"><h2>${esc(title)}</h2><button class="link-button" data-action="nav" data-page="${page}">Tout voir ${ico('arrow',16)}</button></div>`;}
 function homeTile(title,subtitle,icon,page,highlight=false){return `<button class="tile ${highlight?'highlight':''}" data-action="nav" data-page="${page}"><span class="tile-icon">${ico(icon,23)}</span><span><strong>${esc(title)}</strong><p>${esc(subtitle)}</p></span></button>`;}
@@ -301,15 +310,6 @@ function renderPdfViewer(hash){
  return `<section class="pdf-viewer-page" aria-label="Lecture du document PDF">
   <div class="pdf-viewer-heading"><span class="chip red">Document PDF</span><h1>${esc(pdf.label)}</h1></div>
   <div class="pdf-reader" data-pdf-url="${esc(href)}" aria-label="Lecteur PDF">
-   <div class="pdf-reader-controls" role="group" aria-label="Navigation du document">
-    <button class="pdf-reader-button" data-action="pdf-prev" aria-label="Page précédente" disabled>${ico('back',18)}</button>
-    <span class="pdf-reader-counter" id="pdf-page-counter" aria-live="polite">Chargement…</span>
-    <button class="pdf-reader-button" data-action="pdf-next" aria-label="Page suivante" disabled>${ico('arrow',18)}</button>
-    <span class="pdf-reader-divider"></span>
-    <button class="pdf-reader-button" data-action="pdf-zoom-out" aria-label="Dézoomer" disabled>−</button>
-    <span class="pdf-reader-zoom" id="pdf-zoom-label" aria-live="polite">100 %</span>
-    <button class="pdf-reader-button" data-action="pdf-zoom-in" aria-label="Zoomer" disabled>+</button>
-   </div>
    <div class="pdf-reader-scroll" id="pdf-reader-scroll" tabindex="0" aria-label="Page du PDF ; faites défiler pour lire">
     <div class="pdf-reader-status" id="pdf-reader-status" role="status">Préparation du document…</div>
     <canvas id="pdf-reader-canvas" class="pdf-reader-canvas" aria-label="Page PDF"></canvas>
