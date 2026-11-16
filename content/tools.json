@@ -1,5 +1,15 @@
 [
   {
+    "section": "affichages",
+    "title": "Elections professionnelles -Voter FO",
+    "summary": "Procédure de vote",
+    "tag": "",
+    "order": 2,
+    "id": "pub-mwiyyvb8-8tykw1",
+    "bodyHtml": "",
+    "cover": "./media/outils/mwiyywjq-yz6r6mgarm-couverture.webp"
+  },
+  {
     "id": "b-inter",
     "section": "bareme",
     "title": "Simuler le barème interdépartemental",
