@@ -100,3 +100,8 @@
 .pdf-attachment-item .form-control{min-width:0}
 .pdf-attachment-meta{grid-column:1/-1;font-size:.78rem;color:var(--muted)}
 .pdf-preview-row{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;border:1px solid var(--line);padding:10px;border-radius:10px}
+
+/* V3.12 — ajout de capsules vidéo dans l’éditeur */
+.youtube-admin{border:1px solid var(--line);background:#fffdfd;border-radius:14px;padding:16px;display:grid;gap:9px}
+.youtube-admin textarea{font-size:.88rem;min-height:108px;line-height:1.6}
+#previewVideos[hidden]{display:none!important}

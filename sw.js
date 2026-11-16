@@ -1,5 +1,5 @@
-const CACHE_NAME = 'snudifo30-v3.11-barre-pdf';
-const APP_FILES = ['./','./index.html','./styles.css','./app.js','./article-content.js','./pdf-library.js','./pdf-reader.js','./manifest.webmanifest','./content/news.json','./content/events.json','./content/tools.json','./content/home.json','./assets/bandeau-elections-2026.png','./assets/logo-snudi-original.jpg','./assets/icon-snudi-relief-192.png','./assets/icon-snudi-relief-512.png','./assets/icon-snudi-relief-maskable-512.png','./assets/apple-touch-icon-snudi-relief-180.png','./assets/favicon-snudi-relief-48.png'];
+const CACHE_NAME = 'snudifo30-v3.12-videos-youtube';
+const APP_FILES = ['./','./index.html','./styles.css','./app.js','./article-content.js','./pdf-library.js','./pdf-reader.js','./youtube-videos.js','./manifest.webmanifest','./content/news.json','./content/events.json','./content/tools.json','./content/home.json','./assets/bandeau-elections-2026.png','./assets/logo-snudi-original.jpg','./assets/icon-snudi-relief-192.png','./assets/icon-snudi-relief-512.png','./assets/icon-snudi-relief-maskable-512.png','./assets/apple-touch-icon-snudi-relief-180.png','./assets/favicon-snudi-relief-48.png'];
 self.addEventListener('install', event => {
  event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(APP_FILES)).then(() => self.skipWaiting()));
 });
