@@ -1,0 +1,13 @@
+# Correctif V3.6.1 — intitulé des archives dans l’administration
+
+Dans **Admin → Mes outils**, l’ancienne catégorie « Documents utiles (ancienne rubrique, archives) » s’appelle maintenant **« Archives (non publiées) »**.
+
+Le même libellé est utilisé dans la liste des contenus, dans le menu de choix d’une rubrique et dans le classement. La formulation d’aide a également été harmonisée.
+
+## Installer sur GitHub Pages
+1. Décompresser le ZIP.
+2. À la racine de `adrienheritier/snudifo30`, remplacer **uniquement** `admin.html` et `admin.js` par les fichiers du correctif.
+3. Valider sur la branche `main` et attendre le déploiement Pages.
+4. Recharger `admin.html` en forçant l’actualisation (Ctrl + Maj + R sur ordinateur).
+
+**Pas de modification de contenu** : aucun fichier `content/*.json`, image, article, événement ou outil n’est modifié. La clé technique `documents` demeure inchangée pour préserver les données existantes et les classements.
