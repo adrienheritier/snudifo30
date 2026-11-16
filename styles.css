@@ -153,3 +153,30 @@
 .youtube-fallback{color:var(--red);font-size:.79rem;font-weight:700;text-decoration:none}
 .youtube-fallback:hover{text-decoration:underline}
 @media (max-width:480px){.article-videos{margin:14px 0 18px;gap:14px}.youtube-frame{border-radius:10px}}
+
+/* V3.13 — Actualisation rapide et prévention des doubles-appuis zoomants.
+   touch-action: manipulation neutralise le double-tap pour zoomer tout en
+   conservant le zoom volontaire par pincement (accessibilité) et le zoom PDF. */
+html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adjust: 100%; }
+.mobile-top, .bottom-nav, .desktop-sidebar, button, a, input, select, textarea,
+.pdf-reader-controls, .calendar-day { touch-action: manipulation; }
+.mobile-top .refresh-button { flex: 0 0 auto; }
+.mobile-top .refresh-button:disabled { opacity: .65; cursor: progress; }
+.mobile-top .refresh-button[aria-busy="true"] .ico { animation: snudi-refresh-spin .9s linear infinite; }
+@keyframes snudi-refresh-spin { to { transform: rotate(360deg); } }
+@media (max-width: 590px) {
+  /* Sur le lecteur PDF, conserver le bouton d'actualisation et masquer
+     uniquement la cloche pour laisser de la place au bouton Retour. */
+  .pdf-top .icon-btn.notification-button { display: none; }
+  .pdf-top .icon-btn.refresh-button { display: inline-flex; width: 36px; height: 36px; }
+}
+@media (max-width: 359px) {
+  .mobile-top { gap: 7px; padding-inline: 9px; }
+  .mobile-top .icon-btn { width: 37px; height: 37px; flex: 0 0 auto; }
+  .mobile-top .top-logo { width: 43px; height: 43px; }
+  .mobile-top .top-name strong { font-size: .86rem; }
+  .mobile-top .top-name span { font-size: .63rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .mobile-top .refresh-button[aria-busy="true"] .ico { animation: none; }
+}

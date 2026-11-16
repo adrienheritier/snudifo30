@@ -54,10 +54,14 @@ let settings=readStore(SETTINGS_KEY,{favorites:[],alerts:['Carte scolaire','AESH
 let ui={newsFilter:'Toutes',newsQuery:'',rightsFilter:'Tous',rightsQuery:'',calendarView:'agenda',calendarFilter:'Tous',month:localISO(new Date()).slice(0,7),supportCategory:'',supportText:'',supportName:'',supportContact:''};
 const saveSettings=()=>{try{localStorage.setItem(SETTINGS_KEY,JSON.stringify(settings));}catch{}};
 let contentLoadFailed=false;
+let refreshInProgress=false;
 async function loadSharedContent(withNotice=false){
  const names=['news','events','tools','home'];
+ // Une URL différente à chaque actualisation force le chargement réseau des JSON,
+ // y compris lorsqu'un ancien service worker ou un cache HTTP est présent.
+ const bust=withNotice?'?actualisation='+Date.now():'';
  const results=await Promise.allSettled(names.map(async name=>{
-  const res=await fetch(`./content/${name}.json`,{cache:'no-store'});
+  const res=await fetch(`./content/${name}.json${bust}`,{cache:'no-store'});
   if(name==='home'&&res.status===404)return data.home; // Compatible avec les installations précédentes
   if(!res.ok)throw Error(`Impossible de charger ${name} (HTTP ${res.status})`);
   const records=await res.json();
@@ -73,6 +77,18 @@ async function loadSharedContent(withNotice=false){
  renderApp();
  if(withNotice)toast(contentLoadFailed?'Une ou plusieurs rubriques sont indisponibles ; vérifiez la connexion.':'Contenus actualisés depuis GitHub.');
  return !contentLoadFailed;
+}
+async function refreshPublications(){
+ if(refreshInProgress)return;
+ refreshInProgress=true;
+ const button=document.querySelector('[data-action="refresh-content"]');
+ if(button){button.disabled=true;button.setAttribute('aria-busy','true');}
+ try{await loadSharedContent(true);}
+ finally{
+  refreshInProgress=false;
+  const current=document.querySelector('.mobile-top [data-action="refresh-content"]');
+  if(current){current.disabled=false;current.removeAttribute('aria-busy');}
+ }
 }
 const esc=x=>String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const cleanUrl=x=>{try{let u=new URL(x);return ['http:','https:','mailto:','tel:'].includes(u.protocol)?u.href:'';}catch{return '';}};
@@ -180,7 +196,7 @@ function pdfReaderToolbar(){return `<div class="pdf-reader-controls" role="group
    </div>`;}
 function appShell(body,page){let tab=getTab(page);const sidebarTabs=[...primaryTabs.slice(0,4),['accompagnement','Accompagnement','help'],['contact','Contact','phone'],['menu','Plus','menu']];return `<div class="layout">
 <aside class="desktop-sidebar"><img class="sidebar-logo" src="./assets/logo-snudi-original.jpg" alt="Logo officiel SNUDI FO 30"/><div class="sidebar-tag">La force syndicale dans le Gard</div>${sidebarTabs.map(([p,l,i])=>`<button class="side-button ${p===page||p===tab?'active':''}" data-action="nav" data-page="${p}">${ico(i,20)} ${l}</button>`).join('')}<div class="sidebar-bottom"><b>Besoin d'un accompagnement ?</b><p>Le SNUDI-FO du Gard est à vos côtés.</p>${btn('Contacter le syndicat','nav:contact','btn btn-primary btn-sm btn-block')}</div></aside>
-<div class="workspace ${page==='pdf'?'pdf-workspace':''}"><header class="mobile-top ${page==='pdf'?'pdf-top':''}">${page==='pdf'?`<button type="button" class="pdf-top-back" data-action="pdf-back" aria-label="Revenir à la publication">${ico('back',21)} Retour</button>`:''}<img class="top-logo" src="./assets/logo-snudi-original.jpg" alt="SNUDI-FO 30"/><div class="top-name"><strong>SNUDI-FO 30</strong><span>Vos droits • Votre syndicat</span></div><span class="top-spacer"></span><button class="icon-btn" data-action="nav" data-page="notifications" aria-label="Notifications">${ico('bell',21)}${newsSort(data.news).some(n=>!settings.seenNews.includes(n.id))?'<i class="notification-dot"></i>':''}</button></header>${page==='pdf'?pdfReaderToolbar():''}<main class="main">${body}<div class="footer-note">Application SNUDI-FO 30 • Vérifiez les sources et dates de mise à jour avant toute démarche.</div></main><nav class="bottom-nav" aria-label="Navigation principale">${primaryTabs.map(([p,l,i])=>navButton(p,l,i,tab===p)).join('')}</nav></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>`;}
+<div class="workspace ${page==='pdf'?'pdf-workspace':''}"><header class="mobile-top ${page==='pdf'?'pdf-top':''}">${page==='pdf'?`<button type="button" class="pdf-top-back" data-action="pdf-back" aria-label="Revenir à la publication">${ico('back',21)} Retour</button>`:''}<img class="top-logo" src="./assets/logo-snudi-original.jpg" alt="SNUDI-FO 30"/><div class="top-name"><strong>SNUDI-FO 30</strong><span>Vos droits • Votre syndicat</span></div><span class="top-spacer"></span><button type="button" class="icon-btn refresh-button" data-action="refresh-content" title="Actualiser les publications" aria-label="Actualiser les publications" ${refreshInProgress?'disabled aria-busy="true"':''}>${ico('refresh',21)}</button><button class="icon-btn notification-button" data-action="nav" data-page="notifications" aria-label="Notifications">${ico('bell',21)}${newsSort(data.news).some(n=>!settings.seenNews.includes(n.id))?'<i class="notification-dot"></i>':''}</button></header>${page==='pdf'?pdfReaderToolbar():''}<main class="main">${body}<div class="footer-note">Application SNUDI-FO 30 • Vérifiez les sources et dates de mise à jour avant toute démarche.</div></main><nav class="bottom-nav" aria-label="Navigation principale">${primaryTabs.map(([p,l,i])=>navButton(p,l,i,tab===p)).join('')}</nav></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>`;}
 function heading(title,desc='',back=''){return `<div class="page-heading"><div>${back?`<div class="flex-wrap" style="align-items:center;margin-bottom:8px"><button data-action="back" class="backlink" aria-label="Retour">${ico('back')}</button><span class="eyebrow">SNUDI-FO 30</span></div>`:''}<h1>${esc(title)}</h1>${desc?`<p>${esc(desc)}</p>`:''}</div></div>`;}
 function titlebar(title,page){return `<div class="section-head"><h2>${esc(title)}</h2><button class="link-button" data-action="nav" data-page="${page}">Tout voir ${ico('arrow',16)}</button></div>`;}
 function homeTile(title,subtitle,icon,page,highlight=false){return `<button class="tile ${highlight?'highlight':''}" data-action="nav" data-page="${page}"><span class="tile-icon">${ico(icon,23)}</span><span><strong>${esc(title)}</strong><p>${esc(subtitle)}</p></span></button>`;}
@@ -358,7 +374,7 @@ function handleAction(button){const action=button.dataset.action||'',id=button.d
  if(action==='back'){if(history.length>1)history.back();else navto('menu');return;}
  if(action==='news-filter'){ui.newsFilter=value;renderApp();return;}
  if(action==='calendar-filter'){ui.calendarFilter=value;renderApp();return;}
- if(action==='refresh-content'){loadSharedContent(true);return;}
+ if(action==='refresh-content'){refreshPublications();return;}
  if(action==='rights-filter'){ui.rightsFilter=value;renderApp();return;}
  if(action==='calendar-view'){ui.calendarView=value;renderApp();return;}
  if(action==='month-prev'){monthShift(-1);return;}if(action==='month-next'){monthShift(1);return;}
