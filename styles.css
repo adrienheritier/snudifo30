@@ -84,3 +84,15 @@
 .pdf-public-actions .btn{white-space:nowrap}
 .pdf-downloads{margin-top:18px}
 @media(max-width:460px){.pdf-public-actions{width:100%;justify-content:stretch}.pdf-public-actions .btn{flex:1;text-align:center}}
+
+/* V3.9 — Lecture PDF intégrée, bandeau rouge conservé et retour visible. */
+.pdf-top-back{display:inline-flex;align-items:center;justify-content:center;gap:3px;flex:none;border:1px solid rgba(255,255,255,.42);border-radius:10px;background:rgba(255,255,255,.12);color:white;padding:10px 9px;font:inherit;font-weight:800;font-size:.84rem;cursor:pointer;white-space:nowrap}
+.pdf-top-back:hover,.pdf-top-back:focus-visible{background:rgba(255,255,255,.25);outline-color:white}
+.pdf-viewer-page{display:grid;gap:14px}
+.pdf-viewer-heading h1{font-size:clamp(1.22rem,3vw,1.72rem);margin:9px 0 6px;line-height:1.25;overflow-wrap:anywhere}
+.pdf-viewer-heading p{font-size:.82rem;color:var(--muted);margin:0}
+.pdf-frame{display:block;width:100%;height:min(72vh,1000px);min-height:475px;border:1px solid var(--line);border-radius:14px;background:#f3f4f6;box-shadow:var(--shadow)}
+.pdf-viewer-actions{display:flex;gap:10px;flex-wrap:wrap}
+.pdf-viewer-note{font-size:.76rem;line-height:1.5;color:var(--muted);margin:0}
+@media(max-width:590px){.mobile-top.pdf-top{gap:8px;padding-inline:10px}.pdf-top .top-logo{width:41px;height:41px}.pdf-top .top-name{min-width:0}.pdf-top .top-name strong{font-size:.87rem}.pdf-top .top-name span,.pdf-top .icon-btn{display:none}.pdf-frame{height:calc(100dvh - 290px);min-height:340px}.pdf-viewer-actions .btn{flex:1 1 155px}.pdf-top-back{padding:9px 7px}}
+@media(max-width:359px){.pdf-top .top-name strong{font-size:.78rem}.pdf-top-back{font-size:.8rem}}

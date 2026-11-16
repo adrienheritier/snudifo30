@@ -135,7 +135,8 @@ function pdfAttachmentsHtml(record){
  const files=SnudiPdf.attachments(record);if(!files.length)return '';
  return `<section class="pdf-downloads"><h3>Documents PDF</h3><div class="stack">${files.map(d=>{
  const href=SnudiPdf.href(d.path),name=d.label.replace(/[\\/:*?"<>|]/g,'-').slice(0,90)+'.pdf';
- return `<div class="pdf-public-row"><span>${ico('file',19)} <strong>${esc(d.label)}</strong></span><div class="pdf-public-actions"><a class="btn btn-outline btn-sm" href="${esc(href)}" target="_blank" rel="noopener noreferrer">Consulter</a><a class="btn btn-primary btn-sm" href="${esc(href)}" download="${esc(name)}">Télécharger</a></div></div>`;
+ const hash=d.path.match(/^media\/pdfs\/([a-f0-9]{64})\.pdf$/)?.[1];
+ return `<div class="pdf-public-row"><span>${ico('file',19)} <strong>${esc(d.label)}</strong></span><div class="pdf-public-actions"><button type="button" class="btn btn-outline btn-sm" data-action="view-pdf" data-id="${hash}" aria-label="Consulter ${esc(d.label)} dans l’application">Consulter</button><a class="btn btn-primary btn-sm" href="${esc(href)}" download="${esc(name)}">Télécharger</a></div></div>`;
  }).join('')}</div></section>`;
 }
 const ext=(url,label,klass='link-button')=>`<a class="${klass}" href="${esc(cleanUrl(url))}" target="_blank" rel="noopener noreferrer">${label} ${ico('external',15)}</a>`;
@@ -143,14 +144,32 @@ const empty=(title,detail)=>`<div class="empty">${ico('info',26)}<b>${esc(title)
 function showToast(message){let e=document.querySelector('#toast');if(!e){e=document.createElement('div');e.id='toast';document.body.append(e);} e.textContent=message;e.classList.add('visible');clearTimeout(showToast.timer);showToast.timer=setTimeout(()=>e.classList.remove('visible'),3200);}
 const toast=showToast;
 const navto=(page,arg)=>{location.hash='#/'+page+(arg?'?id='+encodeURIComponent(arg):'');};
-function route(){let [path,q]=decodeURIComponent((location.hash||'#/accueil').replace(/^#\/?/,'')).split('?');return {page:path||'accueil',id:new URLSearchParams(q||'').get('id')||''};}
+function route(){
+ const value=(location.hash||'#/accueil').replace(/^#\/?/,'');
+ const split=value.indexOf('?');
+ const page=decodeURIComponent(split<0?value:value.slice(0,split))||'accueil';
+ const params=new URLSearchParams(split<0?'':value.slice(split+1));
+ return {page,id:params.get('id')||'',from:params.get('from')||''};
+}
+function openPdfViewer(hash){
+ if(!/^[a-f0-9]{64}$/.test(hash))return;
+ const from=location.hash.startsWith('#/pdf')?'#/outils':(location.hash||'#/accueil');
+ location.hash='#/pdf?id='+hash+'&from='+encodeURIComponent(from);
+}
+function previousPdfPage(){
+ const from=route().from;
+ if(/^#\/(?:accueil|actualites|news-detail|calendrier|droits|droit|fiches|outil-detail|outils|affichages|dossiers|modeles|modele|contact|adhesion|notifications|menu|accompagnement)(?:\?|$)/.test(from)){
+   // Remplace l’entrée du visualiseur : le bouton retour natif reste cohérent.
+   window.location.replace(from);
+ }else navto('outils');
+}
 function isExternalAddress(s){return /^https?:\/\//i.test(s||'');}
 function navButton(page,label,icon,active){return `<button data-action="nav" data-page="${page}" class="${active?'active':''}" aria-label="${label}">${ico(icon,21)}<span>${esc(label)}</span></button>`;}
 const primaryTabs=[['accueil','Accueil','home'],['actualites','Actus','news'],['calendrier','Agenda','calendar'],['outils','Outils','tools'],['menu','Menu','menu']];
-function getTab(page){if(page==='adhesion')return 'accueil';if(['droit','droits','accompagnement'].includes(page))return 'menu';if(['modele','simulateur','documents','affichages','dossiers','modeles','fiches','outil-detail'].includes(page))return 'outils';if(['evenement'].includes(page))return 'calendrier';if(['news-detail'].includes(page))return 'actualites';return primaryTabs.some(x=>x[0]===page)?page:'menu';}
+function getTab(page){if(page==='pdf'){const from=route().from.match(/^#\/([a-z-]+)/)?.[1]||'outils';return from==='pdf'?'outils':getTab(from);}if(page==='adhesion')return 'accueil';if(['droit','droits','accompagnement'].includes(page))return 'menu';if(['modele','simulateur','documents','affichages','dossiers','modeles','fiches','outil-detail'].includes(page))return 'outils';if(['evenement'].includes(page))return 'calendrier';if(['news-detail'].includes(page))return 'actualites';return primaryTabs.some(x=>x[0]===page)?page:'menu';}
 function appShell(body,page){let tab=getTab(page);const sidebarTabs=[...primaryTabs.slice(0,4),['accompagnement','Accompagnement','help'],['contact','Contact','phone'],['menu','Plus','menu']];return `<div class="layout">
 <aside class="desktop-sidebar"><img class="sidebar-logo" src="./assets/logo-snudi-original.jpg" alt="Logo officiel SNUDI FO 30"/><div class="sidebar-tag">La force syndicale dans le Gard</div>${sidebarTabs.map(([p,l,i])=>`<button class="side-button ${p===page||p===tab?'active':''}" data-action="nav" data-page="${p}">${ico(i,20)} ${l}</button>`).join('')}<div class="sidebar-bottom"><b>Besoin d'un accompagnement ?</b><p>Le SNUDI-FO du Gard est à vos côtés.</p>${btn('Contacter le syndicat','nav:contact','btn btn-primary btn-sm btn-block')}</div></aside>
-<div class="workspace"><header class="mobile-top"><img class="top-logo" src="./assets/logo-snudi-original.jpg" alt="SNUDI-FO 30"/><div class="top-name"><strong>SNUDI-FO 30</strong><span>Vos droits • Votre syndicat</span></div><span class="top-spacer"></span><button class="icon-btn" data-action="nav" data-page="notifications" aria-label="Notifications">${ico('bell',21)}${newsSort(data.news).some(n=>!settings.seenNews.includes(n.id))?'<i class="notification-dot"></i>':''}</button></header><main class="main">${body}<div class="footer-note">Application SNUDI-FO 30 • Vérifiez les sources et dates de mise à jour avant toute démarche.</div></main><nav class="bottom-nav" aria-label="Navigation principale">${primaryTabs.map(([p,l,i])=>navButton(p,l,i,tab===p)).join('')}</nav></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>`;}
+<div class="workspace"><header class="mobile-top ${page==='pdf'?'pdf-top':''}">${page==='pdf'?`<button type="button" class="pdf-top-back" data-action="pdf-back" aria-label="Revenir à la publication">${ico('back',21)} Retour</button>`:''}<img class="top-logo" src="./assets/logo-snudi-original.jpg" alt="SNUDI-FO 30"/><div class="top-name"><strong>SNUDI-FO 30</strong><span>Vos droits • Votre syndicat</span></div><span class="top-spacer"></span><button class="icon-btn" data-action="nav" data-page="notifications" aria-label="Notifications">${ico('bell',21)}${newsSort(data.news).some(n=>!settings.seenNews.includes(n.id))?'<i class="notification-dot"></i>':''}</button></header><main class="main">${body}<div class="footer-note">Application SNUDI-FO 30 • Vérifiez les sources et dates de mise à jour avant toute démarche.</div></main><nav class="bottom-nav" aria-label="Navigation principale">${primaryTabs.map(([p,l,i])=>navButton(p,l,i,tab===p)).join('')}</nav></div></div><div id="toast" class="toast" role="status" aria-live="polite"></div>`;}
 function heading(title,desc='',back=''){return `<div class="page-heading"><div>${back?`<div class="flex-wrap" style="align-items:center;margin-bottom:8px"><button data-action="back" class="backlink" aria-label="Retour">${ico('back')}</button><span class="eyebrow">SNUDI-FO 30</span></div>`:''}<h1>${esc(title)}</h1>${desc?`<p>${esc(desc)}</p>`:''}</div></div>`;}
 function titlebar(title,page){return `<div class="section-head"><h2>${esc(title)}</h2><button class="link-button" data-action="nav" data-page="${page}">Tout voir ${ico('arrow',16)}</button></div>`;}
 function homeTile(title,subtitle,icon,page,highlight=false){return `<button class="tile ${highlight?'highlight':''}" data-action="nav" data-page="${page}"><span class="tile-icon">${ico(icon,23)}</span><span><strong>${esc(title)}</strong><p>${esc(subtitle)}</p></span></button>`;}
@@ -269,12 +288,31 @@ function renderAdhesion(){
 }
 function renderContact(){return `${heading('Contact','L’équipe départementale du SNUDI-FO 30 à votre écoute.')}<div class="stack"><div class="card"><div class="contact-row">${ico('mail',21)}<div class="card-body"><b>Courriel</b><small>${esc(CONTACT.mail)}</small></div>${ext('mailto:'+CONTACT.mail,'Écrire')}</div><div class="contact-row">${ico('phone',21)}<div class="card-body"><b>Téléphone</b><small>${esc(CONTACT.phone)}</small></div><a class="link-button" href="tel:${CONTACT.tel}">Appeler</a></div><div class="contact-row">${ico('pin',21)}<div class="card-body"><b>Adresse</b><small>${esc(CONTACT.address)}</small></div></div><div class="contact-row">${ico('link',21)}<div class="card-body"><b>Site officiel</b><small>snudi30.force-ouvriere.org</small></div>${ext(SITE,'Ouvrir')}</div><div class="notice neutral" style="margin-top:12px">${ico('info',18)}<span>Les permanences et horaires ne sont pas renseignés : ne pas se déplacer sans confirmation préalable.</span></div></div>${ext('mailto:'+CONTACT.mail,'Écrire au SNUDI-FO 30','btn btn-primary btn-block')}<div class="grid-two">${btn(`${ico('users',19)} Adhérer`,'nav:adhesion','btn btn-yellow')}${btn(`${ico('calendar',19)} Demander un RDV`,'nav:accompagnement','btn btn-outline')}</div><div class="card"><h2>Un problème dans votre école ?</h2><p class="muted">Décrivez votre situation et préparez une demande d’accompagnement.</p>${btn('Le syndicat m’accompagne','nav:accompagnement','btn btn-neutral btn-block')}</div></div>`;}
 function renderNotifications(){let unread=newsSort(data.news).filter(n=>!settings.seenNews.includes(n.id));return `${heading('Informations à suivre','Fil interne : ces informations ne sont pas des notifications push automatiques.',true)}<div class="stack"><div class="notice neutral">${ico('bell',18)}<span>Sans serveur d’envoi, l’application peut afficher des nouveautés localement, mais <b>ne peut pas notifier à distance en temps réel</b>. Les préférences ci-dessous préparent une version future.</span></div>${btn('Marquer les actualités comme lues','mark-all','btn btn-outline btn-block')}<h2>${unread.length} actualité(s) non lue(s)</h2>${unread.map(newsCard).join('')||empty('Tout est lu','Aucune nouvelle publication dans le jeu de données local.')}<div class="card"><h2>Mes thèmes prioritaires</h2><p class="muted" style="font-size:.8rem">Préférences sauvegardées seulement sur cet appareil.</p>${['Carte scolaire','AESH','Échéance','Carrière','Mobilisations','Formations'].map(t=>`<label style="display:flex;gap:12px;align-items:center;padding:9px 0"><input type="checkbox" data-alert="${esc(t)}" ${settings.alerts.includes(t)?'checked':''} style="accent-color:var(--red);width:19px;height:19px"/> ${esc(t)}</label>`).join('')}</div></div>`;}
+function renderPdfViewer(hash){
+ if(!/^[a-f0-9]{64}$/.test(hash))return `${heading('PDF introuvable','Ce document ne peut pas être ouvert.')}${btn('Retour','pdf-back','btn btn-primary')}`;
+ const path=`media/pdfs/${hash}.pdf`;
+ const records=[...data.news,...data.events,...data.tools];
+ const pdf=records.flatMap(r=>SnudiPdf.attachments(r)).find(a=>a.path===path);
+ if(!pdf)return `${heading('PDF indisponible','Ce document n’est plus associé à une publication.')}${btn('Retour','pdf-back','btn btn-primary')}`;
+ const href=SnudiPdf.href(path);
+ const name=pdf.label.replace(/[\\/:*?"<>|]/g,'-').slice(0,90)+'.pdf';
+ return `<section class="pdf-viewer-page" aria-label="Lecture du document PDF">
+  <div class="pdf-viewer-heading"><span class="chip red">Document PDF</span><h1>${esc(pdf.label)}</h1><p>Utilisez le bouton « Retour » du bandeau rouge pour revenir à la publication.</p></div>
+  <iframe class="pdf-frame" src="${esc(href)}#toolbar=1" title="PDF : ${esc(pdf.label)}" loading="eager"></iframe>
+  <div class="pdf-viewer-actions">
+   <a class="btn btn-outline" href="${esc(href)}" target="_blank" rel="noopener noreferrer">${ico('external',17)} Ouvrir le PDF séparément</a>
+   <a class="btn btn-primary" href="${esc(href)}" download="${esc(name)}">${ico('download',17)} Télécharger</a>
+  </div>
+  <p class="pdf-viewer-note">Si votre téléphone ne peut pas afficher le PDF directement dans l’application, utilisez « Ouvrir le PDF séparément ».</p>
+ </section>`;
+}
 function renderMenu(){let menuItems=[["J’ai un problème",'Un parcours d’accompagnement','help','accompagnement'],['Contact','Téléphone, adresse, courriel','phone','contact'],['Outils','Affichages, droits, dossiers et courriers','tools','outils'],['Adhérer au SNUDI-FO','Pourquoi adhérer ?','users','adhesion'],['Notifications','Mes préférences de suivi','bell','notifications']];return `${heading('Tous les services','Accédez aux rubriques et aux réglages.')}<div class="stack">${menuItems.map(x=>tileRow(...x)).join('')}<div class="card"><h2>Installer l’application</h2><p class="muted">Sur iPhone : ouvrez cette application dans Safari, touchez « Partager » puis « Sur l’écran d’accueil ». Sur Android : utilisez « Installer l’application » dans le menu du navigateur.</p><div class="notice neutral">${ico('laptop',17)}<span>Pour une installation complète, l’application doit être hébergée en HTTPS (par exemple sur GitHub Pages).</span></div></div><div class="card"><h2>Accessibilité</h2><div class="segmented" style="margin-top:12px"><button data-action="font" data-value="normal" class="${settings.font!=='large'?'active':''}">Texte standard</button><button data-action="font" data-value="large" class="${settings.font==='large'?'active':''}">Texte agrandi</button></div></div></div>`;}
 function renderApp(){let {page,id}=route();let content;switch(page){
 case 'accueil':content=renderHome();break;case 'actualites':content=renderNews();break;case 'news-detail':content=renderNewsDetail(id);break;case 'calendrier':content=renderCalendar();break;
 case 'droits':content=renderRights();break;case 'droit':content=renderRight(id);break;case 'fiches':content=renderToolSection('fiches');break;case 'outil-detail':content=renderToolDetail(id);break;case 'accompagnement':content=renderSupport();break;
 case 'outils':content=renderTools();break;case 'affichages':content=renderAffichages();break;case 'dossiers':content=renderDossiers();break;case 'modeles':content=renderTemplates();break;case 'modele':content=renderTemplate(id);break;
 case 'bareme':content=renderTools();break;case 'demarches':content=renderTools();break;case 'carriere':content=renderTools();break;case 'documents':content=renderTools();break;
+case 'pdf':content=renderPdfViewer(id);break;
 case 'contact':content=renderContact();break;case 'adhesion':content=renderAdhesion();break;case 'notifications':content=renderNotifications();break;
 case 'menu':content=renderMenu();break;default:content=renderHome();page='accueil';}
  document.body.classList.toggle('font-large',settings.font==='large');document.getElementById('app').innerHTML=appShell(content,page);document.title=`${({accueil:'Accueil',actualites:'Actualités',calendrier:'Calendrier',droits:'Mes droits',outils:'Outils',contact:'Contact',adhesion:'Adhésion',accompagnement:'Accompagnement'})[page]||'SNUDI-FO 30'} · SNUDI-FO 30`;
@@ -291,6 +329,8 @@ function monthShift(delta){let [y,m]=ui.month.split('-').map(Number);let d=new D
 function openMail(subject,body){let url=`mailto:${CONTACT.mail}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`;window.location.href=url;toast('Votre application de messagerie doit s’ouvrir. Aucun message n’a été envoyé automatiquement.');}
 function handleAction(button){const action=button.dataset.action||'',id=button.dataset.id||'',value=button.dataset.value||'';
  if(action==='nav'||action.startsWith('nav:')){const page=action.startsWith('nav:')?action.split(':')[1]:button.dataset.page;navto(page,id);return;}
+ if(action==='view-pdf'){openPdfViewer(id);return;}
+ if(action==='pdf-back'){previousPdfPage();return;}
  if(action==='back'){if(history.length>1)history.back();else navto('menu');return;}
  if(action==='news-filter'){ui.newsFilter=value;renderApp();return;}
  if(action==='calendar-filter'){ui.calendarFilter=value;renderApp();return;}
