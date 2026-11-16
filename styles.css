@@ -206,3 +206,36 @@ html { touch-action: manipulation; -webkit-text-size-adjust: 100%; text-size-adj
   .bottom-nav button { padding: 5px 0; gap: 4px; font-size: .61rem; }
   .bottom-nav button .ico { width: 20px; height: 20px; }
 }
+
+/* V3.16 — Images de couverture intégrales, centrées et non recadrées.
+   L'image publiée conserve son ratio natif ; seul son encombrement est limité.
+   Ne s'applique pas au bandeau d'accueil ni aux vidéos. */
+.news-detail > img.article-cover,
+.tool-detail > img.article-cover,
+.news-detail .article-cover,
+.tool-detail .article-cover {
+  display: block;
+  width: 100%;
+  max-width: 800px;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 0;
+  aspect-ratio: auto !important;
+  object-fit: contain !important;
+  object-position: center center;
+  margin: 16px auto 18px;
+  border-radius: 12px;
+}
+/* Les couvertures miniatures des listes ne doivent pas non plus perdre leurs bords. */
+.news-card img.news-picture,
+.tool-item-card img.tool-item-thumb {
+  object-fit: contain !important;
+  object-position: center center;
+}
+@media (max-width: 600px) {
+  .news-detail .article-cover,
+  .tool-detail .article-cover {
+    width: 100%;
+    max-width: 100%;
+  }
+}
