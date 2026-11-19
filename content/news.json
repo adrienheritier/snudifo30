@@ -1,5 +1,20 @@
 [
   {
+    "date": "2026-11-19",
+    "tag": "Actualité",
+    "title": "Application : Affiche à partager",
+    "summary": "Une affiche avec un QR Code pour installer l'application.",
+    "attachments": [
+      {
+        "label": "Application affiche 2026",
+        "path": "media/pdfs/067714aac8d159f19a6f219f2697c76bae9bcaa49dbca0cff4769674c14ffe3c.pdf"
+      }
+    ],
+    "id": "pub-mwnb3qr0-ip47rj",
+    "bodyHtml": "<h2>L'application SNUDI FO est arrivée !</h2><div><br></div><div>Il faut maintenant que les collègues la découvrent, se l'approprient et l'utilisent !</div><div><br></div><div>Partagez cette affiche largement, affichez là dans vos écoles.</div>",
+    "cover": "./media/actualites/mwnb3smz-uf8tiyzhmn-couverture.webp"
+  },
+  {
     "date": "2026-11-16",
     "tag": "Actualité",
     "title": "VIDEO : Professeurs des écoles, AESH, défendre les personnels !",
