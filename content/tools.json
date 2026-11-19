@@ -1,5 +1,21 @@
 [
   {
+    "section": "affichages",
+    "title": "Nouvelle Application !",
+    "summary": "Affiche pour l'installation de la nouvelle application mobile du SNUDI FO",
+    "tag": "",
+    "order": 3,
+    "id": "pub-mwnazkmg-2zuicx",
+    "bodyHtml": "",
+    "cover": "./media/outils/mwnazmky-b119k4nl4j-couverture.webp",
+    "attachments": [
+      {
+        "label": "Application affiche 2026",
+        "path": "media/pdfs/067714aac8d159f19a6f219f2697c76bae9bcaa49dbca0cff4769674c14ffe3c.pdf"
+      }
+    ]
+  },
+  {
     "section": "dossiers",
     "title": "Questionnaires sur les violences sexuelles et sexistes : pourquoi FO a voté contre",
     "summary": "Explication de l’opposition de la FNEC FP-FO au projet de questionnaires destinés aux élèves de la grande section à la terminale.",
